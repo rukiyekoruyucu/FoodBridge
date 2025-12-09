@@ -9,6 +9,9 @@ yarn-debug.log*
 # VS Code specific files
 .vscode/
 
+# Firebase Admin Keys
+firebase-adminsdk.json
+
 # Package Lock files
 # Bu dosyayı göndermeniz önerilir, ancak bazıları hariç tutar
 # package-lock.json
