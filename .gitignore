@@ -1,0 +1,6 @@
+node_modules/
+.env
+data/
+foodbridge.db
+*.log
+src/config/firebase_key.json
