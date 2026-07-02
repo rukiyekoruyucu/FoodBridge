@@ -1,6 +1,26 @@
+# Backend
 node_modules/
 .env
 data/
 foodbridge.db
 *.log
 src/config/firebase_key.json
+
+# Flutter app
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/.gradle/
+app/android/local.properties
+app/android/app/google-services.json
+app/ios/.symlinks/
+app/ios/Pods/
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/flutter_export_environment.sh
+app/lib/firebase_options.dart
+app/pubspec.lock
+
+# OS
+.DS_Store
+Thumbs.db
