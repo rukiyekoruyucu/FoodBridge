@@ -81,7 +81,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
 
     inventoryNotifier
-        .transferToFridge(item.itemId, simulatedFridgeId)
+        .transferToFridge(item.id, int.tryParse(simulatedFridgeId) ?? 0)
         .then((_) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
