@@ -103,16 +103,13 @@ async function deletePrivateFridge({ userId, fridgeId }) {
   const fridge = await privateFridgeRepository.getMyPrivateFridgeById({ userId, fridgeId });
   if (!fridge) throw new ApiError(404, "Private fridge not found");
 
-  // güvenli silme: önce items, sonra fridge (transaction)
-  await db.query("BEGIN");
-  try {
-    await privateFridgeRepository.deleteItemsInMyPrivateFridge({ userId, fridgeId });
-    await privateFridgeRepository.deleteMyPrivateFridge({ userId, fridgeId });
-    await db.query("COMMIT");
-  } catch (e) {
-    await db.query("ROLLBACK");
-    throw e;
-  }
+  // ✅ better-sqlite3'te db.transaction() kullanılır — db.query() yok
+  const deleteTx = db.transaction(() => {
+    privateFridgeRepository.deleteItemsInMyPrivateFridgeSync({ userId, fridgeId });
+    privateFridgeRepository.deleteMyPrivateFridgeSync({ userId, fridgeId });
+  });
+
+  deleteTx();
 }
 
 async function updatePrivateItem({ userId, fridgeId, itemId, patch }) {

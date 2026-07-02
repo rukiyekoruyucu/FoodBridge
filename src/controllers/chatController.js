@@ -5,12 +5,7 @@ const userRepository = require("../repositories/userRepository");
 async function openDm(req, res, next) {
   try {
     const me = req.user.id;
-    const role = (req.user.role || "").toString().toUpperCase();
-    if (role !== "NEEDY") {
-      throw new ApiError(403, "Only NEEDY can start a direct message");
-    }
-
-    // routes: POST /chat/dm/:userId
+    // ✅ Tüm authenticated kullanıcılar DM açabilir (NEEDY, PERSONAL, CORPORATE)
     const other = Number(req.params.userId);
     if (!other || other <= 0) throw new ApiError(400, "userId required");
     if (other === me) throw new ApiError(400, "Cannot DM yourself");

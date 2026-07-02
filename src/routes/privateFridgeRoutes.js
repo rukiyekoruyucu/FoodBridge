@@ -21,8 +21,9 @@ const createPrivateItemSchema = Joi.object({
   quantity: Joi.number().integer().min(1).required(),
   expiryDate: Joi.date().iso().optional(),
   unit: Joi.string().allow("", null).optional(),
-  imageUrl: Joi.string().uri().allow("", null).optional()
+  imageUrl: Joi.string().uri().allow("", null).optional(),
 });
+
 const updatePrivateFridgeSchema = Joi.object({
   name: Joi.string().min(2).optional(),
   description: Joi.string().allow("", null).optional(),
@@ -41,7 +42,34 @@ const updatePrivateItemSchema = Joi.object({
   imageUrl: Joi.string().uri().allow("", null).optional(),
 }).min(1);
 
-// ✅ Private fridge update/delete
+// ─────────────────────────────────────────────────────────────────────────────
+// ✅ ÖNEMLI: Literal (statik) route'lar dynamic (:param) route'lardan ÖNCE gelir
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Static top-level routes (ÖNCE)
+router.get("/", auth, c.listMyPrivateFridges);
+router.post("/", auth, validate(createPrivateFridgeSchema), c.createPrivateFridge);
+
+// ✅ "my-public-fridges" literal route — /:fridgeId'den önce olmalı
+router.get(
+  "/my-public-fridges",
+  auth,
+  role(["PERSONAL", "CORPORATE"]),
+  c.listMyPublicFridges
+);
+
+// ✅ "items/:itemId/transfer" literal prefix — /:fridgeId'den önce olmalı
+router.put(
+  "/items/:itemId/transfer",
+  auth,
+  role(["PERSONAL", "CORPORATE"]),
+  c.transferItemToPublicFridge
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic /:fridgeId routes (SONRA)
+// ─────────────────────────────────────────────────────────────────────────────
+
 router.put(
   "/:fridgeId",
   auth,
@@ -51,7 +79,18 @@ router.put(
 
 router.delete("/:fridgeId", auth, c.deletePrivateFridge);
 
-// ✅ Private item update/delete
+router.get("/:fridgeId/items", auth, c.listItems);
+
+router.post(
+  "/:fridgeId/items",
+  auth,
+  role(["NEEDY", "PERSONAL", "CORPORATE"]),
+  validate(createPrivateItemSchema),
+  c.addPrivateItem
+);
+
+router.get("/:fridgeId/items-expiring", auth, c.listExpiringItemsInPrivateFridge);
+
 router.put(
   "/:fridgeId/items/:itemId",
   auth,
@@ -65,41 +104,6 @@ router.delete(
   auth,
   role(["NEEDY", "PERSONAL", "CORPORATE"]),
   c.deletePrivateItem
-);
-
-// ✅ Expiring items (bildirim için)
-router.get(
-  "/:fridgeId/items-expiring",
-  auth,
-  c.listExpiringItemsInPrivateFridge
-);
-
-router.get("/", auth, c.listMyPrivateFridges);
-
-router.post("/", auth, validate(createPrivateFridgeSchema), c.createPrivateFridge);
-
-router.get("/:fridgeId/items", auth, c.listItems);
-
-router.post(
-  "/:fridgeId/items",
-  auth,
-  role(["NEEDY", "PERSONAL", "CORPORATE"]),
-  validate(createPrivateItemSchema),
-  c.addPrivateItem
-);
-
-router.put(
-  "/items/:itemId/transfer",
-  auth,
-  role(["PERSONAL", "CORPORATE"]),
-  c.transferItemToPublicFridge
-);
-
-router.get(
-  "/my-public-fridges",
-  auth,
-  role(["PERSONAL", "CORPORATE"]),
-  c.listMyPublicFridges
 );
 
 module.exports = router;

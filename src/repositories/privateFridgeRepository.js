@@ -188,15 +188,22 @@ function updateItemInMyPrivateFridge({ userId, fridgeId, itemId, patch }) {
   return db.prepare(`SELECT * FROM items WHERE id = ?`).get(itemId) || null;
 }
 
-function deleteItemsInMyPrivateFridge({ userId, fridgeId, itemId }) {
+// ✅ Alias'lar: service tarafı transaction içinden senkron çağırır
+function deleteItemsInMyPrivateFridgeSync({ userId, fridgeId }) {
   db.prepare(
     `DELETE FROM items
-     WHERE id = ?
-       AND fridge_id = ?
+     WHERE fridge_id = ?
        AND fridge_id IN (
          SELECT id FROM fridges WHERE id = ? AND owner_user_id = ? AND is_public = 0
        )`
-  ).run(itemId, fridgeId, fridgeId, userId);
+  ).run(fridgeId, fridgeId, userId);
+}
+
+function deleteMyPrivateFridgeSync({ userId, fridgeId }) {
+  db.prepare(
+    `DELETE FROM fridges
+     WHERE id = ? AND owner_user_id = ? AND is_public = 0`
+  ).run(fridgeId, userId);
 }
 
 function listExpiringItemsInMyPrivateFridge({ userId, fridgeId, daysBefore = 2 }) {
@@ -222,8 +229,10 @@ module.exports = {
   createPrivateItem,
   moveItemToFridge,
   updateMyPrivateFridge,
-  deleteItemsInMyPrivateFridge,
+  deleteItemsInMyPrivateFridge: deleteItemsInMyPrivateFridgeSync, // keep old name
+  deleteItemsInMyPrivateFridgeSync,
   deleteMyPrivateFridge,
+  deleteMyPrivateFridgeSync,
   getItemInMyPrivateFridge,
   updateItemInMyPrivateFridge,
   deleteItemInMyPrivateFridge,
