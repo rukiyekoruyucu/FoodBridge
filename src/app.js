@@ -35,15 +35,49 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "10mb" }));
 
-// ── Rate limiting ────────────────────────────────────────────────────────────
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,                  // max requests per window per IP
+// ── Rate Limiting — Route Bazlı (1000+ kullanıcı için optimize) ─────────────
+
+// Auth: Brute force koruması — 15 dakikada max 20 deneme
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts, please try again later." },
+});
+
+// Upload: Cloudinary yükleme — dakikada max 15
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many uploads, please wait a moment." },
+});
+
+// Chat REST: Mesaj endpoint — dakikada max 60 (1 mesaj/sn)
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many messages, please slow down." },
+});
+
+// Genel API: 15 dakikada 300 istek (eski 200'den artırıldı — meşru kullanım)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later." },
 });
-app.use("/api/", limiter);
+
+// ── Limiters — spesifik route'lar önce gelir ─────────────────────────────────
+app.use("/api/auth", authLimiter);
+app.use("/api/uploads", uploadLimiter);
+app.use("/api/chat", chatLimiter);
+app.use("/api/", generalLimiter);  // geri kalan her şey
 
 // ── Health endpoints ─────────────────────────────────────────────────────────
 app.get("/health", (req, res) => res.json({ status: "ok" }));

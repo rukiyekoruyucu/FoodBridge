@@ -98,3 +98,34 @@ CREATE TABLE IF NOT EXISTS follows (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(follower_id, followee_id)
 );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PERFORMANCE INDEXES — 1000+ kullanici icin zorunlu
+-- Hepsi IF NOT EXISTS — mevcut DB uzerinde guvenle calisir, yeniden olusturmaz
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- items: en sik sorgulanan tablo
+CREATE INDEX IF NOT EXISTS idx_items_status          ON items(status);
+CREATE INDEX IF NOT EXISTS idx_items_fridge_id       ON items(fridge_id);
+CREATE INDEX IF NOT EXISTS idx_items_donor_user_id   ON items(donor_user_id);
+CREATE INDEX IF NOT EXISTS idx_items_status_created  ON items(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_items_category        ON items(category);
+CREATE INDEX IF NOT EXISTS idx_items_lat_lng         ON items(lat, lng);
+
+-- fridges: harita ve public sorgulari icin
+CREATE INDEX IF NOT EXISTS idx_fridges_public        ON fridges(is_public);
+CREATE INDEX IF NOT EXISTS idx_fridges_owner         ON fridges(owner_user_id);
+CREATE INDEX IF NOT EXISTS idx_fridges_lat_lng       ON fridges(latitude, longitude);
+
+-- donations: bagis sorgulari icin
+CREATE INDEX IF NOT EXISTS idx_donations_item_id     ON donations(item_id);
+CREATE INDEX IF NOT EXISTS idx_donations_donor_id    ON donations(donor_id);
+CREATE INDEX IF NOT EXISTS idx_donations_recipient   ON donations(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_donations_status      ON donations(status);
+
+-- chat_messages: inbox icin kritik — bu olmadan her chat aclisinda full scan
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room    ON chat_messages(room_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_sender  ON chat_messages(sender_id);
+
+-- users: leaderboard siralama icin
+CREATE INDEX IF NOT EXISTS idx_users_kindness        ON users(kindness_points DESC);

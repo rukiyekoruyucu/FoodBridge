@@ -149,8 +149,18 @@ function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, cate
     const lngN = Number(lng);
     const radKm = Number(radiusKm);
 
-    // We'll use JS-side params for haversine (SQLite has no acos/radians by default,
-    // but better-sqlite3 inherits the built-in math functions which ARE available)
+    // ✅ Bounding box on-filter: pahali Haversine'den once ucuz koordinat filtresi
+    // 1 derece enlem ~111km, 1 derece boylam ~111km*cos(lat)
+    const latDelta = radKm / 111.0;
+    const lngDelta = radKm / (111.0 * Math.cos(latN * Math.PI / 180));
+
+    params.push(latN - latDelta, latN + latDelta, lngN - lngDelta, lngN + lngDelta);
+    where.push(`(
+      f.latitude  BETWEEN ? AND ?
+      AND f.longitude BETWEEN ? AND ?
+    )`);
+
+    // Sonra kesin Haversine filtresi
     params.push(latN, lngN, latN, lngN);
     distanceSelect = `
       (6371 * acos(
@@ -196,6 +206,14 @@ function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, cate
 }
 
 function listMapMarkers({ lat, lng, radiusKm = 10, category = null, q = null, limit = 200 }) {
+  const latN = Number(lat);
+  const lngN = Number(lng);
+  const radKm = Number(radiusKm);
+
+  // ✅ Bounding box pre-filter: index kullanan ucuz filtre
+  const latDelta = radKm / 111.0;
+  const lngDelta = radKm / (111.0 * Math.cos(latN * Math.PI / 180));
+
   return db.prepare(
     `WITH base AS (
       SELECT
@@ -216,6 +234,8 @@ function listMapMarkers({ lat, lng, radiusKm = 10, category = null, q = null, li
         AND f.is_public = 1
         AND i.lat IS NOT NULL
         AND i.lng IS NOT NULL
+        AND i.lat  BETWEEN ? AND ?
+        AND i.lng  BETWEEN ? AND ?
         AND (? IS NULL OR i.category = ?)
         AND (
           ? IS NULL
@@ -228,7 +248,14 @@ function listMapMarkers({ lat, lng, radiusKm = 10, category = null, q = null, li
     WHERE distance_km <= ?
     ORDER BY distance_km ASC
     LIMIT ?`
-  ).all(lat, lng, lat, category, category, q, q, q, radiusKm, limit);
+  ).all(
+    latN, lngN, latN,               // haversine
+    latN - latDelta, latN + latDelta, // bbox lat
+    lngN - lngDelta, lngN + lngDelta, // bbox lng
+    category, category,              // category filter
+    q, q, q,                         // text search
+    radKm, limit                     // radius + limit
+  );
 }
 
 function listMyPrivateItems(userId, limit = 200) {
