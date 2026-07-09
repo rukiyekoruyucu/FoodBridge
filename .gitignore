@@ -1,32 +1,63 @@
-# Backend
+# ──────────────────────────────────────────
+# BACKEND (Node.js)
+# ──────────────────────────────────────────
 node_modules/
 .env
 data/
-foodbridge.db
 *.log
+logs/
+
+# Firebase service account key — ASLA commit etme
 src/config/firebase_key.json
 
-# Flutter app
-app/.dart_tool/
+# ──────────────────────────────────────────
+# FLUTTER APP (app/)
+# ──────────────────────────────────────────
+
+# Build outputs
 app/build/
+app/.dart_tool/
 app/.flutter-plugins
 app/.flutter-plugins-dependencies
+
+# Android Gradle cache
 app/android/.gradle/
 app/android/local.properties
 app/android/app/google-services.json
+
+# iOS/macOS build artifacts
 app/ios/.symlinks/
 app/ios/Pods/
 app/ios/Flutter/Generated.xcconfig
 app/ios/Flutter/flutter_export_environment.sh
+
+# Firebase & sensitive
 app/lib/firebase_options.dart
+
+# Unnecessary desktop/web platforms (mobile-only app)
+app/linux/
+app/macos/
+app/windows/
+app/web/
+
+# Pubspec lock (monorepo'da gerekli değil)
 app/pubspec.lock
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Build artifacts & large binaries (GitHub limit: 50MB)
+# ──────────────────────────────────────────
+# LARGE BINARY FILES
+# GitHub 50MB limit — bunları Releases'e koy
+# ──────────────────────────────────────────
 *.apk
 *.ipa
 *.aab
-app/build/
+*.exe
+
+# ──────────────────────────────────────────
+# OS / Editor
+# ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
