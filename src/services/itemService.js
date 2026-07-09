@@ -46,8 +46,8 @@ function getItemDetail(id) {
   return itemRepository.getItemDetail(id);
 }
 
-function getLatestFeed({ category = null, q = null, limit = 20 }) {
-  return itemRepository.listLatestFeed({ category, q, limit });
+function getLatestFeed({ category = null, q = null, limit = 20, offset = 0 }) {
+  return itemRepository.listLatestFeed({ category, q, limit, offset });
 }
 
 function getPublicItemsByUser({ userId, limit = 30 }) {

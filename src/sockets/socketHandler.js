@@ -6,6 +6,29 @@ const userRepository = require("../repositories/userRepository");
 const ApiError = require("../utils/ApiError");
 const admin = require("../config/firebase");
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Token cache — authMiddleware ile aynı mantık, socket authenticate için
+// ─────────────────────────────────────────────────────────────────────────────
+const socketTokenCache = new Map();
+const TOKEN_TTL = 5 * 60 * 1000; // 5 dakika
+
+function getCachedUid(token) {
+  const entry = socketTokenCache.get(token);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    socketTokenCache.delete(token);
+    return null;
+  }
+  return entry.uid;
+}
+
+function setCachedUid(token, uid) {
+  if (socketTokenCache.size >= 5000) {
+    socketTokenCache.delete(socketTokenCache.keys().next().value);
+  }
+  socketTokenCache.set(token, { uid, expiresAt: Date.now() + TOKEN_TTL });
+}
+
 function parseId(raw, name) {
   const n = parseInt(raw, 10);
   if (!Number.isInteger(n) || n <= 0) {
@@ -17,27 +40,33 @@ function parseId(raw, name) {
 function initSocket(server) {
   const io = new Server(server, {
     cors: { origin: process.env.CORS_ORIGIN || "*" },
+    // ✅ Performance: ping timeout ve interval optimize edildi
+    pingTimeout: 30000,
+    pingInterval: 25000,
+    // ✅ Buffer boyutu sınırlandırıldı (büyük mesaj DoS koruması)
+    maxHttpBufferSize: 1e5, // 100KB
   });
 
   io.on("connection", (socket) => {
     logger.info("Socket connected " + socket.id);
-
-    // socket context
     socket.data.user = null;
 
     /**
      * 1️⃣ AUTHENTICATE
-     * Frontend:
      * socket.emit("authenticate", { token })
      */
-    socket.on("authenticate", async ({ token }) => {
+    socket.on("authenticate", async ({ token } = {}) => {
       try {
         if (!token) throw new ApiError(401, "Token required");
 
-        const decoded = await admin.auth().verifyIdToken(token);
-        const firebaseUid = decoded.uid;
+        // ✅ Cache hit → Firebase'e gitmez
+        let firebaseUid = getCachedUid(token);
+        if (!firebaseUid) {
+          const decoded = await admin.auth().verifyIdToken(token);
+          firebaseUid = decoded.uid;
+          setCachedUid(token, firebaseUid);
+        }
 
-        // getUserByFirebaseUid is synchronous (better-sqlite3)
         const user = userRepository.getUserByFirebaseUid(firebaseUid);
         if (!user) throw new ApiError(401, "User not registered");
 
@@ -48,7 +77,6 @@ function initSocket(server) {
           fullName: user.full_name || "",
           email: user.email || "",
           username: user.username || "",
-          phone: user.phone || "",
           avatarUrl: user.avatar_url || "",
           bio: user.bio || "",
         };
@@ -57,14 +85,13 @@ function initSocket(server) {
         logger.info(`Socket authenticated: userId=${user.id}`);
       } catch (e) {
         logger.warn("Socket auth failed: " + (e.message || e));
-        socket.emit("authenticated", { ok: false });
+        socket.emit("authenticated", { ok: false, message: e.message });
         socket.disconnect(true);
       }
     });
 
     /**
      * 2️⃣ JOIN ROOM
-     * Frontend:
      * socket.emit("joinRoom", roomId)
      */
     socket.on("joinRoom", (roomIdRaw) => {
@@ -74,13 +101,16 @@ function initSocket(server) {
         const roomId = parseId(roomIdRaw, "roomId");
         const senderId = socket.data.user.id;
 
-        // isUserInRoom is synchronous (better-sqlite3)
         const ok = chatRepository.isUserInRoom(roomId, senderId);
         if (!ok) throw new ApiError(403, "You are not allowed in this room");
 
         socket.join(String(roomId));
-        socket.emit("joinedRoom", { roomId });
 
+        // ✅ joinedRooms cache — send-message'da tekrar isUserInRoom sorgusu yapmamak için
+        if (!socket.data.joinedRooms) socket.data.joinedRooms = new Set();
+        socket.data.joinedRooms.add(roomId);
+
+        socket.emit("joinedRoom", { roomId });
         logger.info(`User ${senderId} joined room ${roomId}`);
       } catch (e) {
         socket.emit("socketError", { message: e.message || "Join failed" });
@@ -88,11 +118,10 @@ function initSocket(server) {
     });
 
     /**
-     * 3️⃣ SEND MESSAGE (DB + broadcast)
-     * Frontend:
+     * 3️⃣ SEND MESSAGE
      * socket.emit("send-message", { roomId, message })
      */
-    socket.on("send-message", ({ roomId: roomIdRaw, message }) => {
+    socket.on("send-message", ({ roomId: roomIdRaw, message } = {}) => {
       try {
         if (!socket.data.user) throw new ApiError(401, "Not authenticated");
 
@@ -102,15 +131,16 @@ function initSocket(server) {
         if (!message || typeof message !== "string" || message.trim().length === 0) {
           throw new ApiError(400, "Message is required");
         }
-        if (message.length > 1000) throw new ApiError(400, "Message too long");
+        if (message.length > 1000) throw new ApiError(400, "Message too long (max 1000 chars)");
 
-        // Both synchronous now
-        const ok = chatRepository.isUserInRoom(roomId, senderId);
-        if (!ok) throw new ApiError(403, "You are not allowed in this room");
+        // ✅ joinedRooms cache varsa DB sorgusu yapmadan kontrol et
+        const alreadyJoined = socket.data.joinedRooms?.has(roomId);
+        if (!alreadyJoined) {
+          const ok = chatRepository.isUserInRoom(roomId, senderId);
+          if (!ok) throw new ApiError(403, "You are not allowed in this room");
+        }
 
         const created = chatRepository.createMessage(roomId, senderId, message.trim());
-
-        // sender dahil HERKESE gider
         io.to(String(roomId)).emit("new-message", created);
       } catch (e) {
         socket.emit("socketError", { message: e.message || "Send failed" });
@@ -119,6 +149,9 @@ function initSocket(server) {
 
     socket.on("disconnect", () => {
       logger.info("Socket disconnected " + socket.id);
+      // ✅ Cleanup — bellek sızıntısı önlenir
+      socket.data.user = null;
+      socket.data.joinedRooms = null;
     });
   });
 

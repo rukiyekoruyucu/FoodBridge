@@ -17,6 +17,7 @@ class ItemService {
     String? category,
     String? q,
     int limit = 20,
+    int offset = 0, // ✅ Pagination desteği
   }) async {
     try {
       final res = await apiClient.get(
@@ -27,6 +28,7 @@ class ItemService {
             'category': category.trim(),
           if (q != null && q.trim().isNotEmpty) 'q': q.trim(),
           'limit': limit,
+          if (offset > 0) 'offset': offset,
         },
       );
       return _asList(res.data).toList();
@@ -78,6 +80,7 @@ class ItemService {
     String? category,
     String? q,
     int limit = 20,
+    int offset = 0, // ✅ Pagination desteği
   }) async {
     try {
       final res = await apiClient.get(
@@ -91,6 +94,7 @@ class ItemService {
             'category': category.trim(),
           if (q != null && q.trim().isNotEmpty) 'q': q.trim(),
           'limit': limit,
+          if (offset > 0) 'offset': offset,
         },
       );
       return _asList(res.data).toList();

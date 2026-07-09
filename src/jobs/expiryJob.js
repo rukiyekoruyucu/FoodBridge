@@ -14,12 +14,20 @@ function _daysLeft(expiryDate) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
+// ✅ Aynı item için birden fazla bildirim gönderme — in-memory set
+// Railway restart'ta sıfırlanır (kabul edilebilir — günlük job)
+const _notifiedToday = new Set();
+
+function _getTodayKey(itemId, threshold) {
+  const d = new Date();
+  return `${itemId}-${threshold}-${d.getFullYear()}${d.getMonth()}${d.getDate()}`;
+}
+
 async function runExpiryCheck() {
   const thresholds = [7, 3, 1];
 
   try {
     for (const d of thresholds) {
-      // findExpiringItems is now synchronous
       const items = itemRepository.findExpiringItems(d);
 
       for (const item of items) {
@@ -28,17 +36,21 @@ async function runExpiryCheck() {
 
         const daysLeft = _daysLeft(expiry);
 
-        // Bildir: 7/3/1 gün kaldığında
+        // Bildir: 7/3/1 gün kaldığında — aynı gün tekrarlama
         if (thresholds.includes(daysLeft)) {
           const userId = item.donor_user_id || item.user_id || item.owner_user_id;
           if (userId) {
-            await notificationService.sendExpiryNotification(userId, item, daysLeft);
+            const key = _getTodayKey(item.id, daysLeft);
+            if (!_notifiedToday.has(key)) {
+              await notificationService.sendExpiryNotification(userId, item, daysLeft);
+              _notifiedToday.add(key);
+            }
           }
         }
 
         // Süresi geçtiyse expired yap
         if (daysLeft < 0) {
-          await itemService.markItemExpired(item.id);
+          itemService.markItemExpired(item.id);
         }
       }
     }
@@ -49,14 +61,34 @@ async function runExpiryCheck() {
   }
 }
 
+// ✅ Bellek sızıntısı önlemi: Her gün gece yarısı _notifiedToday temizlenir
+let _scheduledTask = null;
+
 function scheduleExpiryJob() {
-  // Her gece saat 02:00'de çalıştır
-  cron.schedule("0 2 * * *", () => {
-    runExpiryCheck().catch(() => {});
+  // Gece yarısı: bildirim setini temizle
+  cron.schedule("0 0 * * *", () => {
+    const prevSize = _notifiedToday.size;
+    _notifiedToday.clear();
+    logger.info(`Expiry job: cleared ${prevSize} notification keys`);
   });
 
-  // Uygulama ilk açıldığında bir kere çalıştır
-  runExpiryCheck().catch(() => {});
+  // Her gece saat 02:00'de çalıştır
+  _scheduledTask = cron.schedule("0 2 * * *", () => {
+    runExpiryCheck().catch((e) => logger.error("Expiry cron error", e));
+  });
+
+  // Uygulama ilk açıldığında bir kere çalıştır (non-blocking)
+  setImmediate(() => {
+    runExpiryCheck().catch((e) => logger.error("Expiry startup error", e));
+  });
 }
 
-module.exports = { scheduleExpiryJob, runExpiryCheck };
+// ✅ Graceful shutdown desteği — node-cron task'ı düzgün durdur
+function stopExpiryJob() {
+  if (_scheduledTask) {
+    _scheduledTask.stop();
+    _scheduledTask = null;
+  }
+}
+
+module.exports = { scheduleExpiryJob, stopExpiryJob, runExpiryCheck };

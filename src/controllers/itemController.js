@@ -25,11 +25,12 @@ async function getFeed(req, res, next) {
     const mode = (req.query.mode || "latest").toLowerCase();
 
     const limit = Math.min(Math.max(toIntOr(req.query.limit, 20), 1), 50);
+    const offset = Math.max(toIntOr(req.query.offset, 0), 0); // ✅ Pagination
     const category = cleanStringOrNull(req.query.category);
     const q = cleanStringOrNull(req.query.q);
 
     if (mode === "latest") {
-      const rows = await itemService.getLatestFeed({ category, q, limit });
+      const rows = await itemService.getLatestFeed({ category, q, limit, offset });
       return res.json(rows);
     }
 
@@ -47,13 +48,8 @@ async function getFeed(req, res, next) {
       );
 
       const rows = await itemService.getFeed({
-  lat,
-  lng,
-  radiusKm,
-  category,
-  q,
-  limit,
-});
+        lat, lng, radiusKm, category, q, limit, offset,
+      });
 
       return res.json(rows);
     }

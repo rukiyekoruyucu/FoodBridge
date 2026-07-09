@@ -38,7 +38,8 @@ function createItem({
   return db.prepare(`SELECT * FROM items WHERE id = ?`).get(info.lastInsertRowid);
 }
 
-function listLatestFeed({ category = null, q = null, limit = 20 }) {
+function listLatestFeed({ category = null, q = null, limit = 20, offset = 0 }) {
+  const safeOffset = Math.max(parseInt(offset, 10) || 0, 0);
   return db.prepare(
     `SELECT
        i.*,
@@ -61,8 +62,8 @@ function listLatestFeed({ category = null, q = null, limit = 20 }) {
          OR COALESCE(i.description,'') LIKE '%' || ? || '%'
        )
      ORDER BY i.created_at DESC
-     LIMIT ?`
-  ).all(category, category, q, q, q, Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50));
+     LIMIT ? OFFSET ?`
+  ).all(category, category, q, q, q, Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50), safeOffset);
 }
 
 function listItemsInFridge(fridgeId) {
@@ -118,9 +119,10 @@ function findExpiringItems(daysBefore = 2) {
   ).all(daysBefore);
 }
 
-function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, category = null, q = null, limit = 20 }) {
+function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, category = null, q = null, limit = 20, offset = 0 }) {
   const params = [];
   const where = [];
+  const safeOffset = Math.max(parseInt(offset, 10) || 0, 0);
 
   where.push(`i.status = 'AVAILABLE'`);
   where.push(`f.is_public = 1`);
@@ -149,8 +151,6 @@ function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, cate
     const lngN = Number(lng);
     const radKm = Number(radiusKm);
 
-    // ✅ Bounding box on-filter: pahali Haversine'den once ucuz koordinat filtresi
-    // 1 derece enlem ~111km, 1 derece boylam ~111km*cos(lat)
     const latDelta = radKm / 111.0;
     const lngDelta = radKm / (111.0 * Math.cos(latN * Math.PI / 180));
 
@@ -160,7 +160,6 @@ function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, cate
       AND f.longitude BETWEEN ? AND ?
     )`);
 
-    // Sonra kesin Haversine filtresi
     params.push(latN, lngN, latN, lngN);
     distanceSelect = `
       (6371 * acos(
@@ -181,7 +180,7 @@ function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, cate
   }
 
   const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
-  params.push(safeLimit);
+  params.push(safeLimit, safeOffset);
 
   const sql = `
     SELECT
@@ -199,7 +198,7 @@ function listFeed({ mode = "latest", lat = null, lng = null, radiusKm = 10, cate
     JOIN users   u ON u.id = i.donor_user_id
     WHERE ${where.join(" AND ")}
     ORDER BY ${mode === "nearby" ? "distance_km ASC" : "i.created_at DESC"}
-    LIMIT ?
+    LIMIT ? OFFSET ?
   `;
 
   return db.prepare(sql).all(...params);

@@ -23,8 +23,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _locationService = LocationService();
   final _donationApi = DonationApiService();
+  final _scrollController = ScrollController(); // ✅ Infinite scroll
 
   bool loading = true;
+  bool _loadingMore = false; // ✅ "Daha fazla" yükleniyor
+  bool _hasMore = true;      // ✅ Daha fazla sayfa var mı?
+  int _currentOffset = 0;    // ✅ Sayfalama offset
+  static const _pageSize = 20;
+
   List<dynamic> items = [];
   String? error;
 
@@ -41,6 +47,22 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadTopDonors();
     _loadFeed();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // ✅ Sayfa sonuna gelince otomatik yükleme
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMoreFeed();
+    }
   }
 
   Future<void> _loadTopDonors() async {
@@ -61,49 +83,73 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       loading = true;
       error = null;
+      _currentOffset = 0;
+      _hasMore = true;
     });
 
     try {
+      List<dynamic> data;
       if (mode == "latest") {
-        final data = await ItemService().getLatestFeed(limit: 20);
-        if (!mounted) return;
-        setState(() {
-          items = data;
-          loading = false;
-        });
-        return;
+        data = await ItemService().getLatestFeed(limit: _pageSize, offset: 0);
+      } else {
+        final pos = await _locationService.getCurrentLocation();
+        data = await ItemService().getNearbyFeed(
+          lat: pos.latitude,
+          lng: pos.longitude,
+          radiusKm: radiusKm,
+          limit: _pageSize,
+          offset: 0,
+        );
       }
-
-      final pos = await _locationService.getCurrentLocation();
-      final data = await ItemService().getNearbyFeed(
-        lat: pos.latitude,
-        lng: pos.longitude,
-        radiusKm: radiusKm,
-        limit: 20,
-      );
-
       if (!mounted) return;
       setState(() {
         items = data;
         loading = false;
+        _currentOffset = data.length;
+        _hasMore = data.length == _pageSize;
       });
     } catch (e) {
       if (!mounted) return;
-
       if (mode == "nearby") {
         setState(() {
           mode = "latest";
           loading = false;
-          error = "Konum alınamadı. En yeniler gösteriliyor.\n${e.toString()}";
+          error = "Konum alınamadı. En yeniler gösteriliyor.";
         });
         await _loadFeed();
         return;
       }
-
       setState(() {
         loading = false;
-        error = e.toString();
+        error = e.toString().replaceFirst('Exception: ', '');
       });
+    }
+  }
+
+  // ✅ Daha fazla yükle
+  Future<void> _loadMoreFeed() async {
+    if (_loadingMore || !_hasMore || loading) return;
+    setState(() => _loadingMore = true);
+    try {
+      List<dynamic> data;
+      if (mode == "latest") {
+        data = await ItemService().getLatestFeed(
+          limit: _pageSize, offset: _currentOffset);
+      } else {
+        final pos = await _locationService.getCurrentLocation();
+        data = await ItemService().getNearbyFeed(
+          lat: pos.latitude, lng: pos.longitude,
+          radiusKm: radiusKm, limit: _pageSize, offset: _currentOffset);
+      }
+      if (!mounted) return;
+      setState(() {
+        items = [...items, ...data];
+        _currentOffset += data.length;
+        _hasMore = data.length == _pageSize;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingMore = false);
     }
   }
 
@@ -224,6 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: RefreshIndicator(
           onRefresh: _refreshAll,
           child: ListView(
+            controller: _scrollController, // ✅ Infinite scroll
             padding: EdgeInsets.zero,
             children: [
               // HEADER (light: yeşil, scroll ile gider)
@@ -444,6 +491,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       }),
+
+                      // ✅ Infinite scroll göstergesi
+                      if (_loadingMore)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (!_hasMore && items.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: Text(
+                              'Tüm bağışlar yüklendi ✓',
+                              style: TextStyle(
+                                color: isDark ? Colors.white54 : Colors.black38,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ],
                 ),
