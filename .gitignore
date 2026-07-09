@@ -24,3 +24,9 @@ app/pubspec.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Build artifacts & large binaries (GitHub limit: 50MB)
+*.apk
+*.ipa
+*.aab
+app/build/
