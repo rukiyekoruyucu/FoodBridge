@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:foodbridge/models/donation.dart';
 import 'package:foodbridge/models/private_fridge.dart';
 
 import 'package:foodbridge/providers/auth_notifier.dart';
@@ -432,6 +431,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
 
     if (action == 'donate') {
+      if (!mounted) return;
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,

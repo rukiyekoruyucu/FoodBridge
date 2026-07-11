@@ -114,6 +114,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (mounted) Navigator.pop(context);
     } catch (_) {
       final errMsg = ref.read(authProvider).error ?? "Kayıt başarısız";
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(errMsg)));

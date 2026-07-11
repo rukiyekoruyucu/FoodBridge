@@ -26,7 +26,7 @@ class _PrivateFridgesScreenState extends ConsumerState<PrivateFridgesScreen> {
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
   Color get _ink => AppShell.kInk;
-  Color get _brand => AppShell.kGreen;
+
 
   @override
   void initState() {

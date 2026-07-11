@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foodbridge/providers/auth_notifier.dart';
 import 'package:foodbridge/screens/login_screen.dart';
-import 'package:foodbridge/widgets/home_shell.dart';
 
+// AuthWrapper — sadece login yönlendirmesi için kullanılır.
+// Ana navigasyon GoRouter + HomeShell üzerinden yönetilir (router.dart).
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
@@ -19,7 +20,7 @@ class AuthWrapper extends ConsumerWidget {
       return const LoginScreen();
     }
 
-    final role = auth.user?.role ?? 'PERSONAL';
-    return HomeShell(userRole: role);
+    // Authenticated: GoRouter redirect handles navigation to /home/feed
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

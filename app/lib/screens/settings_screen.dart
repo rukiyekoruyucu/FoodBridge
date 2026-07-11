@@ -455,7 +455,7 @@ class _SwitchTile extends StatelessWidget {
               Switch.adaptive(
                 value: value,
                 onChanged: (v) => onChanged(v),
-                activeColor: brand,
+                activeTrackColor: brand,
               ),
             const SizedBox(width: 6),
             Icon(

@@ -10,7 +10,6 @@ import 'package:foodbridge/services/user_service.dart';
 import 'package:foodbridge/models/donation.dart';
 import 'package:foodbridge/widgets/app_shell.dart';
 import 'package:flutter/foundation.dart';
-import 'donation_requests_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   final bool embedded;

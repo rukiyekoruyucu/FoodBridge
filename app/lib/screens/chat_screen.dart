@@ -32,7 +32,6 @@ class ChatScreen extends ConsumerWidget {
     final chatState = ref.watch(chatProvider(roomId));
     final authId = ref.watch(authProvider).user?.id;
 
-    final ink = AppShell.kInk;
     final brand = AppShell.kGreen;
 
     // ✅ canlı değil, “soft premium” gradient (light mode)

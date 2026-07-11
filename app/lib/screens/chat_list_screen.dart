@@ -25,7 +25,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     super.dispose();
   }
 
-  Widget _card({required Widget child, VoidCallback? onTap}) {
+  Widget _card({required Widget child}) {
     if (_isDark) {
       return GlassBox(child: child);
     }

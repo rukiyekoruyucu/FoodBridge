@@ -10,8 +10,7 @@ import 'package:foodbridge/services/item_service.dart';
 import 'package:foodbridge/services/chat_api_service.dart';
 import 'package:foodbridge/widgets/app_shell.dart';
 
-import 'chat_screen.dart';
-import 'public_profile_screen.dart';
+
 
 String date10(dynamic v) {
   if (v == null) return '';
