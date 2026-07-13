@@ -75,6 +75,6 @@ jobs:
         run: |
           echo "Checking syntax for all JS files..."
           find src -name "*.js" | while read f; do
-            node --check "$f" && echo "✓ $f" || (echo "✗ SYNTAX ERROR: $f" && exit 1)
+            node --check "$f" && echo "OK $f" || (echo "FAIL SYNTAX ERROR: $f" && exit 1)
           done
           echo "All files passed syntax check."
