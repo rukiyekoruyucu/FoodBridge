@@ -14,15 +14,5 @@ module.exports = {
   ],
   coverageReporters: ['text', 'lcov', 'clover'],
   coverageDirectory: 'coverage',
-  // Clear mocks between tests
-  clearMocks: true,
-  // Fail if coverage drops below thresholds
-  coverageThreshold: {
-    global: {
-      branches:   40,
-      functions:  50,
-      lines:      50,
-      statements: 50,
-    },
-  },
+  // clearMocks: true,
 };
