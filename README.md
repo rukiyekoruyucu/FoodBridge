@@ -1,483 +1,423 @@
 <div align="center">
 
-<img src="app/assets/logo.png" alt="FoodBridge Logo" width="120" />
+<img src="app/assets/foodbridge_logo.png" alt="FoodBridge Logo" width="140" />
 
-# 🌉 FoodBridge
+# FoodBridge
 
-**Gıda israfıyla savaşan, ihtiyaç sahipleriyle bağışçıları buluşturan topluluk platformu**
+### An open-source platform connecting food donors with people in need — fighting waste, one meal at a time.
 
+[![CI](https://github.com/rukiyekoruyucu/FoodBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/rukiyekoruyucu/FoodBridge/actions/workflows/ci.yml)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Railway](https://img.shields.io/badge/Railway-Deployed-0B0D0E?logo=railway&logoColor=white)](https://railway.app)
+[![Railway](https://img.shields.io/badge/Railway-Live-0B0D0E?logo=railway&logoColor=white)](https://railway.app)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[Canlı API](https://foodbridge-production-7403.up.railway.app/health) • [APK İndir](#apk-kurulumu) • [API Dokümantasyonu](#-api-referansı)
+**[Live API](https://foodbridge-production-7403.up.railway.app/health)** &nbsp;•&nbsp;
+**[Download APK](https://github.com/rukiyekoruyucu/FoodBridge/releases)** &nbsp;•&nbsp;
+**[API Docs](#-api-reference)** &nbsp;•&nbsp;
+**[Türkçe](README.tr.md)**
 
 </div>
 
 ---
 
-## 📋 İçindekiler
+## About the Project
 
-- [Proje Hakkında](#-proje-hakkında)
-- [Özellikler](#-özellikler)
-- [Ekran Görüntüleri](#-ekran-görüntüleri)
-- [Teknoloji Yığını](#-teknoloji-yığını)
-- [Proje Yapısı](#-proje-yapısı)
-- [Kurulum](#-kurulum)
-  - [Backend](#backend-kurulumu)
-  - [Flutter App](#flutter-app-kurulumu)
-- [APK Kurulumu](#apk-kurulumu)
-- [Ortam Değişkenleri](#-ortam-değişkenleri)
-- [API Referansı](#-api-referansı)
-- [Kullanıcı Rolleri](#-kullanıcı-rolleri)
-- [Veritabanı Şeması](#-veritabanı-şeması)
-- [Katkıda Bulunma](#-katkıda-bulunma)
+**FoodBridge** is a full-stack mobile + backend platform that tackles food waste by connecting donors (individuals and businesses) with people in need. Built as a monorepo combining a Flutter mobile app with a Node.js/Express REST API, deployed on Railway.
+
+**Core user flows:**
+- Share surplus food for **free**
+- Discover nearby donations on a **real-time map**
+- **Chat directly** with donors via Socket.IO
+- Earn **Kindness Points** and climb the community leaderboard
+- Track personal food stock with a **private fridge** manager
 
 ---
 
-## 🌍 Proje Hakkında
+## Features
 
-**FoodBridge**, gıda israfını önlemek için bağışçıları (bireysel/kurumsal) ihtiyaç sahipleriyle buluşturan bir mobil+backend platformdur. Kullanıcılar:
-
-- Fazla gıdalarını **ücretsiz** paylaşabilir
-- Yakınlarındaki mevcut gıdaları **haritadan** keşfedebilir
-- Doğrudan bağışçıyla **mesajlaşabilir**
-- **Kindness Points** sistemiyle topluluk içinde takdir görebilir
-
----
-
-## ✨ Özellikler
-
-| Özellik | Açıklama |
-|---------|---------|
-| 🗺️ **Harita** | Çevredeki gıda noktalarını gerçek zamanlı haritada göster |
-| 📦 **Bağış Akışı** | En yeni / en yakın modunda filtrelenebilir bağış listesi |
-| 🧊 **Özel Buzdolabı** | Kişisel stok takibi ve son kullanma tarihi uyarıları |
-| 💬 **Chat** | Bağışçı–ihtiyaç sahibi anlık mesajlaşma |
-| 🏆 **Kindness Board** | En fazla bağış yapan kullanıcılar sıralaması |
-| 🔒 **Firebase Auth** | Güvenli e-posta/şifre kimlik doğrulama |
-| 🌙 **Dark Mode** | Tam dark/light tema desteği |
-| 📤 **Cloudinary Upload** | Ürün fotoğrafı yükleme |
-| 🔔 **Bildirimler** | Bağış durumu güncelleme bildirimleri |
+| Feature | Description |
+|---------|-------------|
+| **Map View** | Real-time donation map using OpenStreetMap (no API key) |
+| **Feed** | Paginated list — latest or nearby mode with infinite scroll |
+| **Private Fridge** | Personal inventory tracker with expiry date alerts |
+| **Real-time Chat** | Socket.IO messaging between donors and recipients |
+| **Leaderboard** | Top donors ranked by Kindness Points |
+| **Firebase Auth** | Secure email/password auth with in-memory token cache |
+| **Dark / Light Mode** | Full theme support |
+| **Image Upload** | Cloudinary CDN integration |
+| **Role-based Access** | 3 user roles with fine-grained endpoint permissions |
+| **Scalable** | WAL mode, 16 DB indexes, rate limiting — ready for 1000+ users |
 
 ---
 
-## 📱 Ekran Görüntüleri
+## Architecture
 
-> Ekran görüntüleri yakında eklenecek.
+```
++-----------------------------------------------------+
+|                  Flutter (Android)                   |
+|  GoRouter · Riverpod · Dio · flutter_map · Socket   |
++------------------------+----------------------------+
+                         | HTTPS + WebSocket
++------------------------v----------------------------+
+|             Node.js / Express REST API               |
+|  Firebase Auth Middleware · Joi Validation           |
+|  Rate Limiting · Helmet · Morgan                     |
+|                                                      |
+|   Routes -> Controllers -> Services -> Repos         |
+|                         |                            |
+|      SQLite (better-sqlite3, WAL mode)               |
+|   16 indexes · 64 MB cache · busy_timeout            |
++-----------------------------------------------------+
+         Deployed on Railway · Cloudinary CDN
+```
 
 ---
 
-## 🛠 Teknoloji Yığını
+## Tech Stack
 
-### Backend (`/` — root)
-| Katman | Teknoloji |
-|--------|-----------|
-| Runtime | Node.js 20 + Express 5 |
-| Veritabanı | SQLite 3 (better-sqlite3, WAL mode) |
-| Auth | Firebase Admin SDK |
-| Medya | Cloudinary |
-| Deploy | Railway |
-| Loglama | Winston |
-| Validasyon | Joi |
+### Backend (`/src`)
+
+| Layer | Technology |
+|-------|------------|
+| Runtime | Node.js 20 + Express 4 |
+| Database | SQLite 3 via `better-sqlite3` (WAL mode, 64 MB cache) |
+| Auth | Firebase Admin SDK + 5-min in-memory token cache |
+| Media | Cloudinary |
+| Realtime | Socket.IO 4 |
+| Deployment | Railway |
+| Logging | Winston |
+| Validation | Joi |
+| Rate Limiting | express-rate-limit (per-endpoint) |
+| Testing | Jest 29 + Supertest |
 
 ### Mobile App (`/app`)
-| Katman | Teknoloji |
-|--------|-----------|
+
+| Layer | Technology |
+|-------|------------|
 | Framework | Flutter 3.x (Dart) |
-| State | Riverpod |
-| Navigasyon | GoRouter (StatefulShellRoute) |
+| State Management | Riverpod |
+| Navigation | GoRouter (StatefulShellRoute) |
 | HTTP | Dio + Auth Interceptor |
-| Harita | Flutter Map + OpenStreetMap |
+| Maps | Flutter Map + OpenStreetMap |
 | Auth | Firebase Auth |
 | Fonts | Google Fonts (Inter) |
-| Animations | Shimmer loading |
 
 ---
 
-## 📁 Proje Yapısı
+## Project Structure
 
 ```
-FoodBridge/                         ← Monorepo kök
-├── app/                            ← Flutter mobil uygulama
-│   ├── lib/
-│   │   ├── core/
-│   │   │   ├── api_client.dart     ← Dio + auth interceptor
-│   │   │   ├── api_constants.dart  ← Base URL (debug/release)
-│   │   │   └── router.dart         ← GoRouter (StatefulShellRoute)
-│   │   ├── models/                 ← JSON serileştirme (json_annotation)
-│   │   ├── providers/              ← Riverpod notifier'lar
-│   │   ├── screens/                ← Tüm ekranlar
-│   │   ├── services/               ← API servis katmanı
-│   │   └── widgets/                ← Ortak bileşenler
-│   ├── android/
-│   ├── pubspec.yaml
-│   └── build/app/outputs/
-│       └── flutter-apk/
-│           └── app-release.apk     ← Son build (58 MB)
-│
-├── src/                            ← Backend kaynak kodu
-│   ├── config/
-│   │   ├── db.js                   ← SQLite bağlantısı (WAL mode)
-│   │   ├── migrate.js              ← Schema + public fridge seed
-│   │   └── schema.sql              ← Veritabanı şeması
-│   ├── controllers/                ← İş mantığı katmanı
-│   ├── middlewares/                ← Auth, role, validation
-│   ├── repositories/               ← Saf DB sorgular
-│   ├── routes/                     ← Express Router tanımları
-│   ├── services/                   ← Repository orchestration
-│   └── utils/
-│       ├── ApiError.js
-│       └── logger.js
-├── data/                           ← SQLite DB dosyası (Railway volume)
-├── .env.example
-├── package.json
-└── README.md
+FoodBridge/
+|
++-- .github/
+|   +-- workflows/
+|       +-- ci.yml              <- GitHub Actions CI (Node 18 + 20)
+|
++-- app/                        <- Flutter mobile app
+|   +-- lib/
+|   |   +-- core/               <- Router, API client, constants
+|   |   +-- models/             <- JSON serialization
+|   |   +-- providers/          <- Riverpod state notifiers
+|   |   +-- screens/            <- 14 screens
+|   |   +-- services/           <- API service layer
+|   |   +-- widgets/            <- Shared UI components
+|   +-- android/
+|   +-- pubspec.yaml
+|
++-- src/                        <- Backend source (Node.js)
+|   +-- config/
+|   |   +-- db.js               <- SQLite setup (WAL, pragmas, cache)
+|   |   +-- migrate.js          <- Schema initialization + seed
+|   |   +-- schema.sql          <- Tables + 16 performance indexes
+|   +-- controllers/            <- HTTP request handlers
+|   +-- middlewares/            <- Auth, role, validation
+|   +-- repositories/           <- Pure DB queries (sync API)
+|   +-- routes/                 <- Express Routers
+|   +-- services/               <- Business logic layer
+|   +-- sockets/                <- Socket.IO handler
+|   +-- jobs/                   <- Cron: expire stale items
+|   +-- utils/                  <- ApiError, Haversine geo, logger
+|
++-- tests/
+|   +-- unit/
+|   |   +-- utils/              <- geo.test.js, ApiError.test.js
+|   |   +-- services/           <- itemService.test.js, donationService.test.js
+|   +-- integration/
+|       +-- health.test.js      <- HTTP endpoint tests (supertest)
+|
++-- data/                       <- SQLite DB (Railway volume mount)
++-- .env.example
++-- jest.config.js
++-- package.json
++-- railway.json
++-- README.md
 ```
 
 ---
 
-## 🚀 Kurulum
+## Getting Started
 
-### Backend Kurulumu
+### Prerequisites
 
-#### Ön Gereksinimler
 - Node.js 18+
-- Firebase projesi (Admin SDK credentials)
-- Cloudinary hesabı
-- (Opsiyonel) Railway CLI
+- Flutter SDK 3.x (for mobile app)
+- Firebase project (Admin SDK credentials)
+- Cloudinary account
 
-#### 1. Klonla
+### Backend Setup
 
 ```bash
+# Clone
 git clone https://github.com/rukiyekoruyucu/FoodBridge.git
 cd FoodBridge
-```
 
-#### 2. Bağımlılıkları Yükle
-
-```bash
+# Install dependencies
 npm install
-```
 
-#### 3. `.env` Dosyasını Oluştur
-
-```bash
+# Configure
 cp .env.example .env
+# Fill in Firebase and Cloudinary credentials in .env
+
+# Run
+npm run dev     # Development (nodemon)
+npm start       # Production
 ```
 
-`.env` içeriği:
-
-```env
-PORT=3000
-NODE_ENV=development
-
-# SQLite
-DATABASE_PATH=./data/foodbridge.db
-
-# Firebase Admin — service account JSON yolunu belirt
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-
-# CORS
-CORS_ORIGIN=*
-```
-
-#### 4. Çalıştır
-
+Health check:
 ```bash
-# Development
-npm run dev
-
-# Production
-npm start
+curl https://foodbridge-production-7403.up.railway.app/health
+# -> { "status": "ok" }
 ```
 
-API `http://localhost:3000` adresinde çalışır.
-
-#### Sağlık Kontrolü
-
-```bash
-curl http://localhost:3000/health
-# → { "status": "ok" }
-
-curl http://localhost:3000/health/db
-# → { "status": "ok", "dbTime": "..." }
-```
-
----
-
-### Flutter App Kurulumu
-
-#### Ön Gereksinimler
-- Flutter SDK 3.x
-- Android Studio / Xcode
-- Firebase projesi (`google-services.json`)
-
-#### 1. App Klasörüne Gir
+### Flutter App Setup
 
 ```bash
 cd app
-```
-
-#### 2. Bağımlılıkları Yükle
-
-```bash
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
+
+# Place your google-services.json in android/app/
+# Update lib/core/api_constants.dart with your backend URL
+
+flutter run                    # Debug mode
+flutter build apk --release    # Build release APK
 ```
 
-#### 3. API URL'ini Ayarla
+---
 
-`lib/core/api_constants.dart` dosyasında:
+## Download APK
 
-```dart
-// Debug — yerel backend
-static const String debugBaseUrl = 'http://192.168.x.x:3000/api';
+1. Go to **[Releases](https://github.com/rukiyekoruyucu/FoodBridge/releases)** and download the latest `app-release.apk`
+2. On Android: **Settings → Security → Allow unknown sources**
+3. Tap the APK → **Install**
 
-// Release — Railway deploy
-static const String releaseBaseUrl = 'https://foodbridge-production-7403.up.railway.app/api';
+> **iOS:** Build from source with Xcode + Apple Developer account.
+
+---
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | Server port | No (default: 3000) |
+| `NODE_ENV` | `development` / `production` / `test` | Yes |
+| `DATABASE_PATH` | SQLite file path | Yes |
+| `FIREBASE_PROJECT_ID` | Firebase project ID | Yes |
+| `FIREBASE_CLIENT_EMAIL` | Service account email | Yes |
+| `FIREBASE_PRIVATE_KEY` | Service account private key | Yes |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | Yes |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | Yes |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | Yes |
+| `CORS_ORIGIN` | Allowed CORS origin | No (default: `*`) |
+| `PUBLIC_FRIDGE_ID` | System public fridge ID | No (auto-set) |
+
+---
+
+## API Reference
+
+All endpoints prefixed with `/api`.
+Protected endpoints require: `Authorization: Bearer <firebase-id-token>`
+
+### Auth
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/auth/register` | No | Register new user |
+| `GET` | `/auth/me` | Yes | Get current user |
+
+### Users
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/users/me/summary` | Yes | Profile + stats |
+| `PATCH` | `/users/me` | Yes | Update profile |
+| `GET` | `/users/leaderboard` | No | Top donors |
+| `GET` | `/users/:id/public` | No | Public profile |
+
+### Items
+
+| Method | Endpoint | Auth | Roles | Description |
+|--------|----------|------|-------|-------------|
+| `GET` | `/items/feed` | Yes | All | Paginated feed (latest / nearby) |
+| `GET` | `/items/map` | Yes | All | Map markers |
+| `POST` | `/items` | Yes | PERSONAL, CORPORATE | Create donation |
+| `GET` | `/items/my-public` | Yes | PERSONAL, CORPORATE | My donations |
+| `PUT` | `/items/:id` | Yes | PERSONAL, CORPORATE | Update donation |
+| `DELETE` | `/items/:id` | Yes | PERSONAL, CORPORATE | Remove donation |
+
+Feed params: `?mode=latest|nearby&lat=&lng=&radiusKm=10&category=&q=&limit=20&offset=0`
+
+### Donations
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/donations/request` | Yes | Create request |
+| `GET` | `/donations/items/:itemId/requests` | Yes | List requests |
+| `POST` | `/donations/:id/accept` | Yes | Accept request |
+| `POST` | `/donations/:id/reject` | Yes | Reject request |
+| `POST` | `/donations/:id/confirm-pickup` | Yes | Confirm pickup |
+| `GET` | `/donations/me` | Yes | My history |
+
+Lifecycle: `PENDING -> ACCEPTED -> COMPLETED` (with automatic kindness points award)
+
+### Chat
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/chat/rooms` | Yes | My rooms |
+| `POST` | `/chat/dm/:userId` | Yes | Open DM |
+| `GET` | `/chat/rooms/:roomId/messages` | Yes | Message history |
+
+Socket.IO: `join_room` / `send_message` / `new_message` events
+
+### Uploads
+
+`POST /uploads/image` — `multipart/form-data`, field: `image` (max 10 MB)
+Query: `?folder=avatars|items-public|items-private`
+Response: `{ "imageUrl": "...", "publicId": "..." }`
+
+---
+
+## User Roles
+
+| Role | Description | Can Do |
+|------|-------------|--------|
+| `PERSONAL` | Individual donor | Create donations, manage private fridge, accept/reject requests |
+| `CORPORATE` | Business donor | Same as PERSONAL + corporate profile |
+| `NEEDY` | Person in need | Request donations, open DMs, browse feed and map |
+
+---
+
+## Database Schema
+
+```
+users           — Firebase-integrated user accounts
+fridges         — Public (is_public=1) and private (is_public=0) fridges
+items           — Donations (AVAILABLE / RESERVED / REMOVED / EXPIRED)
+donations       — Request lifecycle (PENDING / ACCEPTED / COMPLETED / CANCELLED)
+chat_rooms      — DM and donation-based rooms
+chat_messages   — Chat messages
+follows         — User follow graph (PENDING / ACCEPTED)
 ```
 
-#### 4. Firebase Ayarları
+16 performance indexes for feed, map, chat, leaderboard, and donation status queries.
 
-- `google-services.json` dosyasını `android/app/` klasörüne ekle
-- `lib/firebase_options.dart` dosyasını `flutterfire configure` ile oluştur
+---
 
-#### 5. Çalıştır
+## Testing
 
 ```bash
-# Debug modu
-flutter run
+npm test                  # All tests
+npm run test:unit         # Unit tests only (no DB or Firebase needed)
+npm run test:integration  # Integration tests (in-memory SQLite)
+npm run test:coverage     # With coverage report
+```
 
-# Release APK oluştur
-flutter build apk --release
+Test coverage:
+
+```
+tests/
++-- unit/
+|   +-- utils/
+|   |   +-- ApiError.test.js       (6 tests)  Custom exception class
+|   |   +-- geo.test.js            (6 tests)  Haversine formula accuracy
+|   +-- services/
+|       +-- itemService.test.js    (10 tests) Business logic + ownership guards
+|       +-- donationService.test.js (8 tests) Donation rules + error cases
++-- integration/
+    +-- health.test.js             (4 tests)  HTTP endpoint smoke tests
+```
+
+All unit tests use **mocked repositories** — zero real DB or Firebase calls in CI.
+
+---
+
+## CI/CD
+
+GitHub Actions runs on every push to `main` and on all pull requests:
+
+| Job | What it does |
+|-----|-------------|
+| `test (18.x)` | Full test suite on Node.js 18 |
+| `test (20.x)` | Full test suite on Node.js 20, uploads coverage artifact |
+| `lint-check` | Syntax validation on all 50 source files |
+
+Railway auto-deploys on every push to `main`.
+
+---
+
+## Performance & Scalability
+
+Optimized for **1,000+ concurrent users**:
+
+| Optimization | Detail |
+|-------------|--------|
+| SQLite WAL mode | Concurrent reads/writes without blocking |
+| 64 MB page cache | Reduces disk I/O dramatically |
+| Firebase token cache | 5-min TTL — avoids per-request Firebase round-trips |
+| 16 DB indexes | No full table scans on hot queries |
+| Bounding box pre-filter | Geographic pre-filter before Haversine calculation |
+| Offset pagination | Feed loads 20 items at a time |
+| Socket room cache | In-memory Set — no DB query per message |
+| Per-endpoint rate limiting | Auth, upload, chat protected independently |
+| `busy_timeout = 5000 ms` | Prevents write-contention crashes under load |
+
+---
+
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit: `git commit -m 'feat: describe your change'`
+4. Push: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+Commit format (Conventional Commits):
+```
+feat:     New feature
+fix:      Bug fix
+perf:     Performance improvement
+test:     Add or update tests
+docs:     Documentation only
+refactor: Restructuring without behavior change
+chore:    Build / config changes
 ```
 
 ---
 
-## 📱 APK Kurulumu
+## License
 
-1. [Releases](https://github.com/rukiyekoruyucu/FoodBridge/releases) sayfasından son `app-release.apk`'yı indir  
-   **VEYA** `app/build/app/outputs/flutter-apk/app-release.apk` dosyasını kullan
-2. Android cihazda **Bilinmeyen Kaynaklar**'a izin ver
-3. APK'yı kur ve aç
-
-> **Not:** iOS için kaynak koddan build almanız gerekir (Xcode + Apple Developer hesabı)
-
----
-
-## 🔑 Ortam Değişkenleri
-
-| Değişken | Açıklama | Zorunlu |
-|----------|---------|---------|
-| `PORT` | Sunucu port | ❌ (default: 3000) |
-| `NODE_ENV` | `development` / `production` | ✅ |
-| `DATABASE_PATH` | SQLite dosya yolu | ✅ |
-| `FIREBASE_PROJECT_ID` | Firebase proje ID | ✅ |
-| `FIREBASE_CLIENT_EMAIL` | Service account e-posta | ✅ |
-| `FIREBASE_PRIVATE_KEY` | Service account özel anahtar | ✅ |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary bulut adı | ✅ |
-| `CLOUDINARY_API_KEY` | Cloudinary API anahtarı | ✅ |
-| `CLOUDINARY_API_SECRET` | Cloudinary gizli anahtar | ✅ |
-| `CORS_ORIGIN` | İzin verilen origin (üretimde kısıtla) | ❌ (default: *) |
-| `PUBLIC_FRIDGE_ID` | Sistem genel buzdolabı ID | ❌ (auto-set) |
-
----
-
-## 📡 API Referansı
-
-Tüm istekler `/api` prefix'iyle başlar.  
-Auth gerektiren endpoint'ler için `Authorization: Bearer <firebase-id-token>` header'ı gereklidir.
-
-### 🔑 Auth — `/api/auth`
-
-| Metod | Endpoint | Auth | Açıklama |
-|-------|----------|------|---------|
-| `POST` | `/auth/register` | ❌ | Yeni kullanıcı kaydı |
-| `GET` | `/auth/me` | ✅ | Giriş yapan kullanıcı bilgisi |
-
-**Register Request:**
-```json
-{
-  "firebaseUid": "string",
-  "fullName": "string (min 2)",
-  "email": "email",
-  "username": "string (alphanum, 3-20)",
-  "role": "PERSONAL | CORPORATE | NEEDY"
-}
-```
-
----
-
-### 👤 Kullanıcılar — `/api/users`
-
-| Metod | Endpoint | Auth | Açıklama |
-|-------|----------|------|---------|
-| `GET` | `/users/me/summary` | ✅ | Profil özeti + istatistikler |
-| `PATCH` | `/users/me` | ✅ | Profil güncelle |
-| `GET` | `/users/leaderboard` | ❌ | En iyi bağışçılar |
-| `GET` | `/users/:id/public` | ❌ | Kullanıcı public profili |
-
----
-
-### 📦 Ürünler — `/api/items`
-
-| Metod | Endpoint | Auth | Roller | Açıklama |
-|-------|----------|------|--------|---------|
-| `GET` | `/items/feed` | ✅ | Hepsi | Akış (latest/nearby) |
-| `GET` | `/items/map` | ✅ | Hepsi | Harita marker'ları |
-| `POST` | `/items` | ✅ | PERSONAL, CORPORATE | Bağış oluştur |
-| `GET` | `/items/my-public` | ✅ | PERSONAL, CORPORATE | Bendi bağışlarım |
-| `PUT` | `/items/:id` | ✅ | PERSONAL, CORPORATE | Bağışı güncelle |
-| `DELETE` | `/items/:id` | ✅ | PERSONAL, CORPORATE | Bağışı kaldır |
-| `GET` | `/items/:id` | ✅ | Hepsi | Bağış detayı |
-
-**Feed Query Params:**
-```
-?mode=latest|nearby
-&lat=41.0&lng=28.9    (nearby için zorunlu)
-&radiusKm=10
-&category=Meyve
-&q=elma
-&limit=20
-```
-
----
-
-### 🎁 Bağışlar — `/api/donations`
-
-| Metod | Endpoint | Auth | Roller | Açıklama |
-|-------|----------|------|--------|---------|
-| `POST` | `/donations/request` | ✅ | Hepsi | Bağış talebi oluştur |
-| `GET` | `/donations/items/:itemId/requests` | ✅ | PERSONAL, CORPORATE | Item'a gelen talepler |
-| `POST` | `/donations/:id/accept` | ✅ | PERSONAL, CORPORATE | Talebi kabul et |
-| `POST` | `/donations/:id/reject` | ✅ | PERSONAL, CORPORATE | Talebi reddet |
-| `POST` | `/donations/:id/confirm-pickup` | ✅ | Hepsi | Teslim alındı onayla |
-| `GET` | `/donations/me` | ✅ | Hepsi | Geçmiş bağışlar |
-
----
-
-### 🧊 Özel Buzdolabı — `/api/private-fridges`
-
-| Metod | Endpoint | Auth | Açıklama |
-|-------|----------|------|---------|
-| `GET` | `/private-fridges` | ✅ | Buzdolaplarımı listele |
-| `POST` | `/private-fridges` | ✅ | Buzdolabı oluştur |
-| `PUT` | `/private-fridges/:id` | ✅ | Buzdolabı güncelle |
-| `DELETE` | `/private-fridges/:id` | ✅ | Buzdolabı sil |
-| `GET` | `/private-fridges/:id/items` | ✅ | Ürünleri listele |
-| `POST` | `/private-fridges/:id/items` | ✅ | Ürün ekle |
-| `PUT` | `/private-fridges/:id/items/:itemId` | ✅ | Ürün güncelle |
-| `DELETE` | `/private-fridges/:id/items/:itemId` | ✅ | Ürün sil |
-| `GET` | `/private-fridges/:id/items-expiring` | ✅ | Son kullanım yaklaşan |
-| `PUT` | `/private-fridges/items/:itemId/transfer` | ✅ | Genel sisteme aktar |
-
----
-
-### 💬 Chat — `/api/chat`
-
-| Metod | Endpoint | Auth | Açıklama |
-|-------|----------|------|---------|
-| `GET` | `/chat/rooms` | ✅ | Sohbet odalarım |
-| `POST` | `/chat/dm/:userId` | ✅ | DM oluştur / aç |
-| `GET` | `/chat/rooms/:roomId/messages` | ✅ | Mesaj geçmişi |
-| `POST` | `/chat/rooms/:roomId/messages` | ✅ | Mesaj gönder |
-
----
-
-### 📤 Yükleme — `/api/uploads`
-
-| Metod | Endpoint | Auth | Açıklama |
-|-------|----------|------|---------|
-| `POST` | `/uploads/image` | ✅ | Fotoğraf yükle (Cloudinary) |
-
-**Query:** `?folder=avatars|items-public|items-private|misc`  
-**Body:** `multipart/form-data` — field: `image` (max 10MB)  
-**Response:** `{ "imageUrl": "https://...", "publicId": "..." }`
-
----
-
-## 👥 Kullanıcı Rolleri
-
-| Rol | Açıklama | Yapabilecekleri |
-|-----|---------|----------------|
-| `PERSONAL` | Bireysel bağışçı | Bağış oluştur, özel buzdolabı yönet, bağış kabul/reddet |
-| `CORPORATE` | Kurumsal bağışçı | PERSONAL ile aynı + kurumsal profil |
-| `NEEDY` | İhtiyaç sahibi | Bağış talebi oluştur, DM aç, bağış akışını görüntüle |
-
----
-
-## 🗄 Veritabanı Şeması
-
-```sql
-users           — Firebase ile entegre kullanıcılar
-fridges         — Genel (is_public=1) ve özel (is_public=0) buzdolapları
-items           — Bağış ürünleri (status: AVAILABLE/RESERVED/REMOVED/EXPIRED)
-donations       — Bağış talepleri ve akış durumu
-chat_rooms      — DM ve bağış bazlı sohbet odaları
-chat_messages   — Mesajlar
-follows         — Kullanıcı takip sistemi (PENDING/ACCEPTED)
-```
-
-**Donation Yaşam Döngüsü:**
-```
-NEEDY → request →  PENDING
-DONOR → accept  →  ACCEPTED  (diğer talepler otomatik CANCELLED)
-DONOR → confirm →  donor_confirmed_at set
-NEEDY → confirm →  COMPLETED + 10 kindness_points + item REMOVED
-```
-
----
-
-## 🚢 Railway Deploy
-
-Backend Railway'de çalışmaktadır. Volume mount ile SQLite dosyası kalıcıdır.
-
-**Ortam değişkenleri Railway Dashboard'dan set edilir.**
-
-Yeni deploy için sadece `git push origin main` yeterlidir — Railway otomatik build + restart yapar.
-
----
-
-## 🤝 Katkıda Bulunma
-
-1. Fork'la
-2. Feature branch oluştur: `git checkout -b feature/yeni-ozellik`
-3. Değişikliklerini commit'le: `git commit -m 'feat: Yeni özellik açıklaması'`
-4. Push'la: `git push origin feature/yeni-ozellik`
-5. Pull Request aç
-
-### Commit Mesaj Formatı
-```
-feat:  Yeni özellik
-fix:   Hata düzeltme
-docs:  Dokümantasyon
-style: Kod formatı
-refactor: Yeniden yapılandırma
-test:  Test ekleme
-```
-
----
-
-## 📄 Lisans
-
-MIT License — Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+[MIT License](LICENSE) (c) 2025 rukiyekoruyucu
 
 ---
 
 <div align="center">
 
-**FoodBridge** — Gıda israfına köprü ol 🌉
+**FoodBridge** — Be a bridge against food waste
 
-Made with ❤️ in Turkey
+*Made with love in Turkey*
 
 </div>

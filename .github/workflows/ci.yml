@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          NODE_ENV: test
+          DATABASE_PATH: ':memory:'
+          FIREBASE_PROJECT_ID: test-project
+          FIREBASE_CLIENT_EMAIL: test@test.iam.gserviceaccount.com
+          FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nMIIE\n-----END PRIVATE KEY-----\n"
+
+      - name: Run all tests with coverage
+        run: npm run test:coverage
+        env:
+          NODE_ENV: test
+          DATABASE_PATH: ':memory:'
+          FIREBASE_PROJECT_ID: test-project
+          FIREBASE_CLIENT_EMAIL: test@test.iam.gserviceaccount.com
+          FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nMIIE\n-----END PRIVATE KEY-----\n"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: matrix.node-version == '20.x'
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  lint-check:
+    name: Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check syntax on all source files
+        run: |
+          echo "Checking syntax for all JS files..."
+          find src -name "*.js" | while read f; do
+            node --check "$f" && echo "✓ $f" || (echo "✗ SYNTAX ERROR: $f" && exit 1)
+          done
+          echo "All files passed syntax check."
