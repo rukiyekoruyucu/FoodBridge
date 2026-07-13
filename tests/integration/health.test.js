@@ -13,6 +13,7 @@ process.env.FIREBASE_PRIVATE_KEY  = '-----BEGIN PRIVATE KEY-----\nMIIE\n-----END
 
 // Mock Firebase Admin so tests don't need real credentials
 jest.mock('firebase-admin', () => ({
+  apps: [],
   initializeApp: jest.fn(),
   credential: { cert: jest.fn() },
   auth: () => ({ verifyIdToken: jest.fn() }),
