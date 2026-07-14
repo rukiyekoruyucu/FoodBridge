@@ -43,20 +43,21 @@ function _ensurePublicFridge() {
     ).get();
 
     if (!fridge) {
-      // Find any real user to be the nominal owner (or disable FK check temporarily)
-      const anyUser = db.prepare(`SELECT id FROM users ORDER BY id ASC LIMIT 1`).get();
-
-      if (anyUser) {
-        const info = db.prepare(
-          `INSERT OR IGNORE INTO fridges (owner_user_id, name, description, latitude, longitude, address, is_public)
-           VALUES (?, '__SYSTEM_PUBLIC__', 'Genel Bağış Noktası', 0, 0, 'Türkiye', 1)`
-        ).run(anyUser.id);
-        fridge = db.prepare(`SELECT id FROM fridges WHERE id = ?`).get(info.lastInsertRowid);
-      } else {
-        // No users yet — skip, will retry on next startup after first registration
-        logger.info('[DB] No users yet — PUBLIC_FRIDGE_ID will be set after first user registers');
-        return;
+      // Find system user or create one to be the nominal owner
+      let systemUser = db.prepare(`SELECT id FROM users WHERE firebase_uid = '__SYSTEM__' LIMIT 1`).get();
+      if (!systemUser) {
+        const info = db.prepare(`
+          INSERT INTO users (firebase_uid, role, full_name, email, username)
+          VALUES ('__SYSTEM__', 'CORPORATE', 'System', 'system@foodbridge.local', 'system')
+        `).run();
+        systemUser = { id: info.lastInsertRowid };
       }
+
+      const info = db.prepare(
+        `INSERT OR IGNORE INTO fridges (owner_user_id, name, description, latitude, longitude, address, is_public)
+         VALUES (?, '__SYSTEM_PUBLIC__', 'Genel Bağış Noktası', 0, 0, 'Türkiye', 1)`
+      ).run(systemUser.id);
+      fridge = db.prepare(`SELECT id FROM fridges WHERE id = ?`).get(info.lastInsertRowid);
     }
 
     if (fridge) {
