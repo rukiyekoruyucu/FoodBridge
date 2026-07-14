@@ -144,7 +144,10 @@ function listUserRooms(meId, limit = 50) {
         cr.donation_id,
         cr.dm_user_a,
         cr.dm_user_b,
-        NULL AS other_user_id
+        CASE
+          WHEN d.donor_id = ? THEN d.recipient_id
+          ELSE d.donor_id
+        END AS other_user_id
       FROM chat_rooms cr
       JOIN donations d ON d.id = cr.donation_id
       WHERE cr.room_type = 'DONATION'
@@ -166,14 +169,14 @@ function listUserRooms(meId, limit = 50) {
       lm.last_message,
       lm.last_message_at,
       lm.last_sender_id,
-      COALESCE(u.full_name, u.username, 'Kullanıcı #' || u.id) AS other_full_name,
-      u.avatar_url AS other_avatar_url
+      COALESCE(u.full_name, u.username, 'Kullanıcı #' || u.id) AS other_user_full_name,
+      u.avatar_url AS other_user_avatar_url
     FROM rooms r
     LEFT JOIN last_msg lm ON lm.room_id = r.id
     LEFT JOIN users u ON u.id = r.other_user_id
     ORDER BY COALESCE(lm.last_message_at, r.created_at) DESC
     LIMIT ?`
-  ).all(meId, meId, meId, meId, meId, limit);
+  ).all(meId, meId, meId, meId, meId, meId, limit);
 }
 
 module.exports = {
