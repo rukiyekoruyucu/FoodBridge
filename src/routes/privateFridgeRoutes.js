@@ -19,7 +19,7 @@ const createPrivateItemSchema = Joi.object({
   description: Joi.string().allow("", null),
   category: Joi.string().allow("", null),
   quantity: Joi.number().integer().min(1).required(),
-  expiryDate: Joi.date().iso().optional(),
+  expiryDate: Joi.string().isoDate().optional(),
   unit: Joi.string().allow("", null).optional(),
   imageUrl: Joi.string().uri().allow("", null).optional(),
 });
@@ -37,7 +37,7 @@ const updatePrivateItemSchema = Joi.object({
   description: Joi.string().allow("", null).optional(),
   category: Joi.string().allow("", null).optional(),
   quantity: Joi.number().integer().min(1).optional(),
-  expiryDate: Joi.date().iso().allow(null).optional(),
+  expiryDate: Joi.string().isoDate().allow(null).optional(),
   unit: Joi.string().allow("", null).optional(),
   imageUrl: Joi.string().uri().allow("", null).optional(),
 }).min(1);

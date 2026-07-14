@@ -11,7 +11,7 @@ const updateItemSchema = Joi.object({
   category: Joi.string().allow("", null).optional(),
   quantity: Joi.number().integer().min(1).allow(null).optional(),
   unit: Joi.string().allow("", null).optional(),
-  expiryDate: Joi.date().iso().optional(),
+  expiryDate: Joi.string().isoDate().optional(),
   address: Joi.string().allow("", null).optional(),
 });
 
@@ -23,7 +23,7 @@ const createItemSchema = Joi.object({
   quantity: Joi.number().integer().min(1).optional(),
   unit: Joi.string().allow("", null).optional(),
   // publicte zorunlu ✅
-  expiryDate: Joi.date().iso().required(),
+  expiryDate: Joi.string().isoDate().required(),
   lat: Joi.number().required(),
   lng: Joi.number().required(),
   address: Joi.string().allow("", null).optional(),
