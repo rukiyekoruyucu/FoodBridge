@@ -1,5 +1,6 @@
 const ApiError = require("../utils/ApiError");
 const itemService = require("../services/itemService");
+const db = require("../config/db");
 
 function toNumberOrNull(v) {
   if (v === undefined || v === null || v === "") return null;
@@ -175,10 +176,11 @@ async function createItem(req, res, next) {
       imageUrl,
     } = req.body;
 
-    const publicFridgeId = Number(process.env.PUBLIC_FRIDGE_ID);
-    if (!Number.isFinite(publicFridgeId)) {
-      throw new ApiError(500, "PUBLIC_FRIDGE_ID is not configured");
+    const publicFridgeRow = db.prepare("SELECT id FROM fridges WHERE is_public = 1 LIMIT 1").get();
+    if (!publicFridgeRow) {
+      throw new ApiError(500, "No public fridge found in the database");
     }
+    const publicFridgeId = publicFridgeRow.id;
 
     const item = await itemService.createPublicDonation({
       publicFridgeId,

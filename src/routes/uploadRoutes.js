@@ -11,6 +11,10 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
-router.post("/image", auth, upload.single("image"), uploadImage);
+const cpUpload = upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "file", maxCount: 1 }
+]);
+router.post("/image", auth, cpUpload, uploadImage);
 
 module.exports = router;

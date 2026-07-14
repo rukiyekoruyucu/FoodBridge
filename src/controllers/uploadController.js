@@ -3,7 +3,12 @@ const ApiError = require("../utils/ApiError");
 
 async function uploadImage(req, res, next) {
   try {
-    if (!req.file) throw new ApiError(400, "image file is required");
+    let file = req.file;
+    if (!file && req.files) {
+      if (req.files.image) file = req.files.image[0];
+      else if (req.files.file) file = req.files.file[0];
+    }
+    if (!file) throw new ApiError(400, "image file is required");
 
     // Folder: avatars | items-public | items-private
     const folder = (req.query.folder || "misc").toString();
@@ -19,10 +24,12 @@ async function uploadImage(req, res, next) {
           resolve(uploaded);
         }
       );
-      stream.end(req.file.buffer);
+      stream.end(file.buffer);
     });
 
     return res.json({
+      url: result.secure_url,
+      secure_url: result.secure_url,
       imageUrl: result.secure_url,
       publicId: result.public_id,
     });
