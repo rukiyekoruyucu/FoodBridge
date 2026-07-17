@@ -39,7 +39,8 @@ function incrementKindnessPoints(userId, points) {
 
 function getUserByFirebaseUid(firebaseUid) {
   return db.prepare(
-    `SELECT id, firebase_uid, role, full_name, email, username, kindness_points, created_at, updated_at
+    `SELECT id, firebase_uid, role, full_name, email, username,
+            kindness_points, avatar_url, bio, created_at, updated_at
      FROM users
      WHERE firebase_uid = ?`
   ).get(firebaseUid) || null;
