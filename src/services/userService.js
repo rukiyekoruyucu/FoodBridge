@@ -16,12 +16,13 @@ async function getUserSummary(userId) {
 async function getTopDonors({ limit = 10 }) {
   return userRepository.listTopDonors(limit);
 }
-async function updateMe(userId, { fullName, username, avatarUrl, bio }) {
+async function updateMe(userId, body) {
+  // Flutter sends snake_case, accept both to be safe
   const patch = {
-    fullName,
-    username,
-    avatarUrl,
-    bio,
+    fullName: body.full_name ?? body.fullName,
+    username: body.username,
+    avatarUrl: body.avatar_url ?? body.avatarUrl,
+    bio: body.bio,
   };
 
   const updated = await userRepository.updateUserById(userId, patch);
