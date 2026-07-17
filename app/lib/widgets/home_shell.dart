@@ -28,7 +28,12 @@ class HomeShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentIndex = navigationShell.currentIndex;
+    
+    // Convert branch index to UI tab index
+    int displayIndex = navigationShell.currentIndex;
+    if (!_isNeedy && displayIndex >= 2) {
+      displayIndex = displayIndex + 1;
+    }
 
     final navTheme = NavigationBarThemeData(
       backgroundColor: Colors.transparent,
@@ -116,7 +121,7 @@ class HomeShell extends StatelessWidget {
         child: NavigationBarTheme(
           data: navTheme,
           child: NavigationBar(
-            selectedIndex: currentIndex,
+            selectedIndex: displayIndex,
             animationDuration: const Duration(milliseconds: 300),
             onDestinationSelected: (i) async {
               // NEEDY: 4 tabs (feed, fridges, map, profile → branches 0,1,2,3)

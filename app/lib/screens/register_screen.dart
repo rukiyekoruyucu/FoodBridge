@@ -178,10 +178,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                     TextField(
                       controller: _nameCtrl,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("Ad Soyad"),
                     ),
                     TextField(
                       controller: _usernameCtrl,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("Kullanıcı Adı"),
                     ),
 
@@ -189,12 +191,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("E-posta"),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _passCtrl,
                       obscureText: _obscure,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("Şifre").copyWith(
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _obscure = !_obscure),
@@ -209,6 +213,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextField(
                       controller: _confirmPassCtrl,
                       obscureText: _obscure,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("Şifre Tekrar"),
                     ),
 
@@ -216,11 +221,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       const SizedBox(height: 12),
                       TextField(
                         controller: _companyCtrl,
+                        style: const TextStyle(color: Colors.white),
                         decoration: _dec("Şirket Adı"),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _locationCtrl,
+                        style: const TextStyle(color: Colors.white),
                         decoration: _dec("Konum"),
                       ),
                     ],
@@ -309,7 +316,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   InputDecoration _dec(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white),
+      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.35)),

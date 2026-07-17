@@ -180,36 +180,8 @@ class ChatScreen extends ConsumerWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: isDark
-                  ? GlassBox(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      child: _MessageInput(roomId: roomId, myUserId: authId),
-                    )
-                  : Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: Colors.black.withValues(alpha: 0.06),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 18,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: _MessageInput(roomId: roomId, myUserId: authId),
-                    ),
+              padding: const EdgeInsets.only(bottom: 6),
+              child: _MessageInput(roomId: roomId, myUserId: authId),
             ),
           ],
         ),
@@ -397,21 +369,29 @@ class _MessageInputState extends ConsumerState<_MessageInput> {
               child: Container(
                 decoration: BoxDecoration(
                   color: _isDark
-                      ? Colors.white.withValues(alpha: 0.92)
-                      : const Color(0xFFF6F7FB),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: _isDark
                         ? Colors.transparent
-                        : Colors.black.withValues(alpha: 0.06),
+                        : Colors.black.withValues(alpha: 0.08),
                   ),
+                  boxShadow: [
+                    if (!_isDark)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                  ],
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: TextField(
                   controller: controller,
                   style: TextStyle(
-                    color: _isDark ? const Color(0xFF0B3D35) : ink,
-                    fontWeight: FontWeight.w800,
+                    color: _isDark ? Colors.white : ink,
+                    fontWeight: FontWeight.w600,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Mesaj yaz...',

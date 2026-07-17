@@ -160,7 +160,7 @@ class _DonationRequestsScreenState
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(ctx).brightness == Brightness.dark ? const Color(0xFF0B1D2A) : Colors.white,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(22),
               ),

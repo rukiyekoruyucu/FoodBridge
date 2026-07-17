@@ -198,7 +198,7 @@ class _AddDonationSheetState extends State<AddDonationSheet> {
   TextStyle _textStyle() => TextStyle(color: _fg, fontWeight: FontWeight.w700);
 
   TextStyle _inputTextStyle() => TextStyle(
-    color: _isDark ? Colors.white : kGreen,
+    color: _isDark ? Colors.white : const Color(0xFF0F172A), // AppShell.kInk
     fontWeight: FontWeight.w800,
   );
 

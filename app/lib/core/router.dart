@@ -10,6 +10,8 @@ import 'package:foodbridge/screens/home_screen.dart';
 import 'package:foodbridge/screens/map_screen.dart';
 import 'package:foodbridge/screens/private_fridges_screen.dart';
 import 'package:foodbridge/screens/profile_screen.dart';
+import 'package:foodbridge/screens/edit_profile_screen.dart';
+import 'package:foodbridge/screens/onboarding_screen.dart';
 import 'package:foodbridge/screens/chat_list_screen.dart';
 import 'package:foodbridge/screens/chat_screen.dart';
 import 'package:foodbridge/screens/private_fridge_detail_screen.dart';
@@ -31,13 +33,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.isLoading) return null;
       final loggedIn = auth.isAuthenticated;
       final loc = state.matchedLocation;
-      final onAuth = loc.startsWith('/login') || loc.startsWith('/register');
-      if (!loggedIn && !onAuth) return '/login';
+      final onAuth = loc.startsWith('/login') || loc.startsWith('/register') || loc.startsWith('/onboarding');
+      if (!loggedIn && !onAuth) return '/onboarding';
       if (loggedIn && onAuth) return '/home/feed';
       return null;
     },
     routes: [
       // ── Auth screens ───────────────────────────────────────────────────────
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -100,6 +106,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home/profile',
                 builder: (context, state) => const ProfileScreen(embedded: true),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => const EditProfileScreen(),
+                  ),
+                ],
               ),
             ],
           ),

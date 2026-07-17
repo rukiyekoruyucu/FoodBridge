@@ -510,7 +510,7 @@ class _PrivateFridgeDetailScreenState
                                     );
 
                                     if (!mounted) return;
-                                    Navigator.pop(context);
+                                    Navigator.pop(ctx);
                                     await _load();
                                   } catch (e) {
                                     setModal(() {
@@ -898,7 +898,7 @@ class _PrivateFridgeDetailScreenState
                                     );
 
                                     if (!mounted) return;
-                                    Navigator.pop(context);
+                                    Navigator.pop(ctx);
                                     await _load();
                                   } catch (e) {
                                     setModal(() {
@@ -945,16 +945,16 @@ class _PrivateFridgeDetailScreenState
   Future<void> _deleteItem(int itemId) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text("Ürün Silinsin mi?"),
         content: const Text("Bu ürün buzdolabından kaldırılacak."),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogCtx, false),
             child: const Text("Vazgeç"),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text("Sil"),
           ),
         ],
@@ -1049,7 +1049,7 @@ class _PrivateFridgeDetailScreenState
                   crossAxisCount: cross,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
-                  childAspectRatio: 0.88,
+                  childAspectRatio: 0.75,
                 ),
                 itemCount: _items.length,
                 itemBuilder: (_, idx) {
@@ -1074,12 +1074,12 @@ class _PrivateFridgeDetailScreenState
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (_) => AlertDialog(
+                        builder: (dialogCtx) => AlertDialog(
                           title: Text(name),
                           content: Text("Kalan: $leftText"),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => Navigator.pop(dialogCtx),
                               child: const Text("Kapat"),
                             ),
                           ],
@@ -1113,30 +1113,62 @@ class _PrivateFridgeDetailScreenState
                             ),
                           ),
                           const SizedBox(height: 8),
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: titleColor,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const Spacer(),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _isDark
+                                      ? Colors.white.withValues(alpha: 0.12)
+                                      : _brand.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: _isDark
+                                        ? Colors.white.withValues(alpha: 0.18)
+                                        : _brand.withValues(alpha: 0.25),
+                                  ),
+                                ),
                                 child: Text(
-                                  name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  leftText,
                                   style: TextStyle(
-                                    color: titleColor,
+                                    color: _isDark
+                                        ? Colors.white.withValues(alpha: 0.95)
+                                        : _ink,
                                     fontWeight: FontWeight.w900,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
-                              PopupMenuButton<String>(
-                                icon: Icon(
-                                  Icons.more_vert,
-                                  color: _isDark ? Colors.white : _ink,
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
                                 ),
-                                onSelected: (v) {
-                                  if (v == "edit") {
-                                    _openEditItemSheet(it);
-                                    return;
-                                  }
-                                  if (v == "donate") {
+                                child: IconButton(
+                                  tooltip: "Bağışla",
+                                  icon: const Icon(Icons.volunteer_activism, color: Colors.orange, size: 20),
+                                  onPressed: () {
                                     showModalBottomSheet(
                                       context: context,
                                       isScrollControlled: true,
@@ -1144,82 +1176,41 @@ class _PrivateFridgeDetailScreenState
                                       builder: (_) => AddDonationSheet(
                                         userRole: widget.userRole,
                                         initialName: name,
-                                        initialDescription:
-                                            (it["description"] ??
-                                                    it["desc"] ??
-                                                    "")
-                                                .toString(),
+                                        initialDescription: (it["description"] ?? it["desc"] ?? "").toString(),
                                         initialQuantity: (it["quantity"] is num)
                                             ? (it["quantity"] as num).toInt()
-                                            : int.tryParse(
-                                                (it["quantity"] ?? "")
-                                                    .toString(),
-                                              ),
-                                        initialExpiry: _parseDate(
-                                          it["expiryDate"] ??
-                                              it["expiry_date"] ??
-                                              it["expiry"],
-                                        ),
-                                        initialCategory: (it["category"] ?? "")
-                                            .toString(),
-                                        initialImageUrl:
-                                            (it["imageUrl"] ??
-                                                    it["image_url"] ??
-                                                    "")
-                                                .toString(),
+                                            : int.tryParse((it["quantity"] ?? "").toString()),
+                                        initialExpiry: _parseDate(it["expiryDate"] ?? it["expiry_date"] ?? it["expiry"]),
+                                        initialCategory: (it["category"] ?? "").toString(),
+                                        initialImageUrl: (it["imageUrl"] ?? it["image_url"] ?? "").toString(),
                                       ),
                                     );
-                                    return;
-                                  }
-                                  if (v == "del") {
-                                    _deleteItem(id);
-                                    return;
-                                  }
-                                },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(
-                                    value: "edit",
-                                    child: Text("Düzenle"),
-                                  ),
-                                  PopupMenuItem(
-                                    value: "donate",
-                                    child: Text("Bağışla"),
-                                  ),
-                                  PopupMenuItem(
-                                    value: "del",
-                                    child: Text("Sil"),
-                                  ),
-                                ],
+                                  },
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: _brand.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  tooltip: "Düzenle",
+                                  icon: Icon(Icons.edit, color: _brand, size: 20),
+                                  onPressed: () => _openEditItemSheet(it),
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  tooltip: "Sil",
+                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                  onPressed: () => _deleteItem(id),
+                                ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _isDark
-                                  ? Colors.white.withValues(alpha: 0.12)
-                                  : _brand.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: _isDark
-                                    ? Colors.white.withValues(alpha: 0.18)
-                                    : _brand.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Text(
-                              leftText,
-                              style: TextStyle(
-                                color: _isDark
-                                    ? Colors.white.withValues(alpha: 0.95)
-                                    : _ink,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 12,
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -1235,15 +1226,17 @@ class _PrivateFridgeDetailScreenState
         context: context,
         title: widget.fridgeName,
         actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: _openAddItemSheet,
+            tooltip: "Ürün Ekle",
+            icon: const Icon(Icons.add_circle_outline),
+          ),
+          IconButton(
+            onPressed: _load,
+            tooltip: "Yenile",
+            icon: const Icon(Icons.refresh),
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddItemSheet,
-        backgroundColor: _isDark ? null : _brand,
-        foregroundColor: _isDark ? null : Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text("Ürün Ekle"),
       ),
       body: content,
     );

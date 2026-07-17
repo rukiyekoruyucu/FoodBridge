@@ -294,356 +294,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  // ---------- ACTIONS ----------
-  Future<void> _openEditProfileSheet() async {
-    final u = ref.read(authProvider).user;
-    if (u == null) return;
-
-    final fullNameCtrl = TextEditingController(text: (u.fullName ?? '').trim());
-    final usernameCtrl = TextEditingController(text: (u.username ?? '').trim());
-    final avatarCtrl = TextEditingController(text: (u.avatarUrl ?? '').trim());
-    final bioCtrl = TextEditingController(text: (u.bio ?? '').trim());
-
-    bool saving = false;
-    bool uploadingAvatar = false;
-
-    Future<void> pickAndUploadAvatar(
-      void Function(void Function()) setModal,
-      BuildContext ctx,
-    ) async {
-      if (kIsWeb) {
-        if (!ctx.mounted) return;
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(
-            content: Text("Web'de fotoğraf yükleme kapalı. Android'de dene."),
-          ),
-        );
-        return;
-      }
-
-      try {
-        final x = await _picker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-          maxWidth: 800,
-        );
-        if (x == null) return;
-
-        setModal(() => uploadingAvatar = true);
-
-        final url = await _upload.uploadImageFromPath(
-          x.path,
-          folder: 'avatars',
-        );
-
-        setModal(() {
-          uploadingAvatar = false;
-          avatarCtrl.text = url;
-        });
-      } catch (e) {
-        setModal(() => uploadingAvatar = false);
-        if (!ctx.mounted) return;
-        ScaffoldMessenger.of(
-          ctx,
-        ).showSnackBar(SnackBar(content: Text('Avatar yüklenemedi: $e')));
-      }
-    }
-
-    InputDecoration _editDec(BuildContext ctx, String label) {
-      final isDark = Theme.of(ctx).brightness == Brightness.dark;
-      return InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : const Color(0xFFF7FDF9),
-        labelStyle: TextStyle(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.80)
-              : _ink.withValues(alpha: 0.85),
-          fontWeight: FontWeight.w800,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.14)
-                : Colors.black.withValues(alpha: 0.08),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.14)
-                : Colors.black.withValues(alpha: 0.08),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: _brand, width: 1.6),
-        ),
-      );
-    }
-
-    final ok = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.45),
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-
-        return StatefulBuilder(
-          builder: (ctx, setModal) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0B1D2A) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(22),
-                  ),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.18)
-                        : Colors.black.withValues(alpha: 0.06),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
-                      blurRadius: 30,
-                      offset: const Offset(0, -10),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Profili Düzenle',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                              color: isDark ? Colors.white : _ink,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: saving
-                              ? null
-                              : () => Navigator.pop(ctx, false),
-                          icon: Icon(
-                            Icons.close,
-                            color: isDark ? Colors.white : _ink,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: fullNameCtrl,
-                      cursorColor: _brand,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : _ink,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      decoration: _editDec(ctx, 'Ad Soyad'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: usernameCtrl,
-                      cursorColor: _brand,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : _ink,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      decoration: _editDec(
-                        ctx,
-                        'Kullanıcı adı (benzersiz olmalı)',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: bioCtrl,
-                      cursorColor: _brand,
-                      minLines: 2,
-                      maxLines: 4,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : _ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      decoration: _editDec(ctx, 'Bio'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: avatarCtrl,
-                      cursorColor: _brand,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : _ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      decoration: _editDec(
-                        ctx,
-                        'Profil Fotoğrafı URL (opsiyonel)',
-                      ),
-                      onChanged: (_) => setModal(() {}),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: (saving || uploadingAvatar)
-                            ? null
-                            : () => pickAndUploadAvatar(setModal, ctx),
-                        icon: uploadingAvatar
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Icon(Icons.photo_library_outlined, color: _brand),
-                        label: Text(
-                          uploadingAvatar
-                              ? 'Yükleniyor...'
-                              : 'Avatar seç & yükle',
-                          style: TextStyle(
-                            color: _brand,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                            color: _brand.withValues(alpha: 0.35),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
-                    if (avatarCtrl.text.trim().isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: SizedBox(
-                              width: 56,
-                              height: 56,
-                              child: Image.network(
-                                avatarCtrl.text.trim(),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: Colors.black12,
-                                  child: const Icon(
-                                    Icons.image_not_supported_outlined,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'URL geçerliyse fotoğraf güncellenir. Boş bırakırsan zorunlu değil.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.75)
-                                    : Colors.black54,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModal(() => saving = true);
-                                Navigator.pop(ctx, true);
-                              },
-                        icon: saving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.save_outlined,
-                                color: Colors.white,
-                              ),
-                        label: Text(
-                          saving ? 'Kaydediliyor...' : 'Kaydet',
-                          style: const TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _brand,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          elevation: 6,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (ok != true) return;
-
-    try {
-      await _userService.updateMe(
-        fullName: fullNameCtrl.text.trim().isEmpty
-            ? null
-            : fullNameCtrl.text.trim(),
-        username: usernameCtrl.text.trim().isEmpty
-            ? null
-            : usernameCtrl.text.trim(),
-        avatarUrl: avatarCtrl.text.trim().isEmpty
-            ? null
-            : avatarCtrl.text.trim(),
-        bio: bioCtrl.text.trim(),
-      );
-
-      await ref.read(authProvider.notifier).refreshMe();
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Profil güncellendi.')));
-      await _loadAll();
-    } catch (e) {
-      if (!mounted) return;
-      final msg = e.toString().replaceFirst('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    }
-  }
 
   // ---------- CARDS ----------
   Widget _donationHistoryCard(Donation donation) {
@@ -887,9 +537,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             bottom: MediaQuery.of(ctx).viewInsets.bottom,
           ),
           child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).brightness == Brightness.dark ? const Color(0xFF0B1D2A) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
             ),
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
             child: StatefulBuilder(
@@ -1244,74 +894,84 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     final avatarUrl = (user?.avatarUrl ?? '').trim();
 
-    final header = Container(
-      decoration: BoxDecoration(
-        color: _isDark ? Colors.transparent : _brand,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(26),
-          bottomRight: Radius.circular(26),
+    final header = Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        // Cover Photo / Color
+        Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: _brand.withOpacity(0.8),
+            image: const DecorationImage(
+              image: AssetImage('assets/images/pattern.png'), // Optionally if pattern exists
+              fit: BoxFit.cover,
+              opacity: 0.3,
+            ),
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-        child: _card(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        // Avatar and Info
+        Container(
+          margin: const EdgeInsets.only(top: 70),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
             children: [
-              _avatarLikeHome(avatarUrl, radius: 34),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: _ink,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                      ),
-                    ),
-                    if (username.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        '@$username',
-                        style: TextStyle(
-                          color: _ink.withValues(alpha: 0.75),
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                    if (bio.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        bio,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _ink.withValues(alpha: 0.85),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _pill('Rol: ${_roleText(role)}'),
-                        _pill('Puan: $points'),
-                      ],
-                    ),
-                  ],
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    width: 4,
+                  ),
+                ),
+                child: _avatarLikeHome(avatarUrl, radius: 46),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                name,
+                style: TextStyle(
+                  color: _isDark ? Colors.white : _ink,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
                 ),
               ),
+              if (username.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '@$username',
+                  style: TextStyle(
+                    color: _ink.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+              if (bio.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  bio,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _ink.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  _pill('Rol: ${_roleText(role)}'),
+                  _pill('Puan: $points'),
+                ],
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
-      ),
+      ],
     );
 
     return AppShell(
@@ -1322,7 +982,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: user == null ? null : _openEditProfileSheet,
+            onPressed: user == null ? null : () => context.push('/home/profile/edit'),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),

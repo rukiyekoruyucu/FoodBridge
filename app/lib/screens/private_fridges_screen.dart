@@ -86,13 +86,23 @@ class _PrivateFridgesScreenState extends ConsumerState<PrivateFridgesScreen> {
   }
 
   InputDecoration _sheetInput(String label) {
-    // Light: yeşil yazı / beyaz input
-    // Dark: beyaz input (sheet gradient üzerinde)
     return InputDecoration(
       labelText: label,
       filled: true,
-      fillColor: Colors.white,
-      border: const OutlineInputBorder(),
+      fillColor: _isDark ? Colors.white.withValues(alpha: 0.12) : Colors.white,
+      labelStyle: TextStyle(color: _isDark ? Colors.white70 : _ink.withValues(alpha: 0.7)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _isDark ? Colors.white : AppShell.kGreen, width: 1.5),
+      ),
     );
   }
 

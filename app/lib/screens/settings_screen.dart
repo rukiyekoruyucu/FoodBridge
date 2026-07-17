@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:foodbridge/providers/auth_notifier.dart';
 import 'package:foodbridge/providers/theme_mode_provider.dart';
@@ -103,9 +104,7 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Profil',
             subtitle: 'Kişisel bilgilerini görüntüle',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profil ekranı yakında.')),
-              );
+              context.push('/home/profile');
             },
           ),
           const SizedBox(height: 10),

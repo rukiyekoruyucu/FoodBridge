@@ -34,9 +34,9 @@ class UserService {
       final res = await _dio.patch(
         '/users/me',
         data: {
-          if (fullName != null) 'fullName': fullName,
+          if (fullName != null) 'full_name': fullName,
           if (username != null) 'username': username,
-          if (avatarUrl != null) 'avatarUrl': avatarUrl,
+          if (avatarUrl != null) 'avatar_url': avatarUrl,
           if (bio != null) 'bio': bio,
         },
       );

@@ -36,21 +36,27 @@ class FoodBridgeApp extends ConsumerWidget {
 }
 
 ThemeData _lightTheme() {
-  const seed = Color(0xFF16A34A);
-  const surface = Color(0xFFF8FAF8);
+  const seed = Color(0xFF059669); // Emerald Green
+  const surface = Color(0xFFF8FAFC); // Slate-50
+  const ink = Color(0xFF0F172A); // Slate-900
+
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
     surface: surface,
     primary: seed,
     onPrimary: Colors.white,
+    onSurface: ink,
   );
 
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
     scaffoldBackgroundColor: surface,
-    textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
+    textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).apply(
+      bodyColor: ink,
+      displayColor: ink,
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: seed,
       foregroundColor: Colors.white,
@@ -76,20 +82,24 @@ ThemeData _lightTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.18),
-      hintStyle: const TextStyle(color: Colors.white70),
-      labelStyle: const TextStyle(color: Colors.white70),
+      fillColor: Colors.white,
+      hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate-500
+      labelStyle: const TextStyle(color: Color(0xFF64748B)),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: .25)),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)), // Slate-200
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.white, width: 1.5),
+        borderSide: const BorderSide(color: seed, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
     ),
     cardTheme: CardThemeData(
@@ -97,55 +107,68 @@ ThemeData _lightTheme() {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+        side: const BorderSide(color: Color(0xFFE2E8F0)), // Slate-200
       ),
     ),
     chipTheme: ChipThemeData(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 0,
+      backgroundColor: const Color(0xFFF1F5F9), // Slate-100
+      labelStyle: const TextStyle(color: ink, fontWeight: FontWeight.w600),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: ink,
       contentTextStyle: GoogleFonts.inter(
           color: Colors.white, fontWeight: FontWeight.w600),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-    dividerTheme: DividerThemeData(
-      color: Colors.black.withValues(alpha: 0.07),
+    dividerTheme: const DividerThemeData(
+      color: Color(0xFFE2E8F0),
       thickness: 1,
     ),
   );
 }
 
 ThemeData _darkTheme() {
-  const seed = Color(0xFF16A34A);
+  const seed = Color(0xFF10B981); // Light Emerald Green for Dark Mode
+  const surface = Color(0xFF0F172A); // Slate-900
+  const ink = Colors.white;
+
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.dark,
+    surface: surface,
+    primary: seed,
+    onPrimary: surface,
+    onSurface: ink,
   );
 
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
-    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+    scaffoldBackgroundColor: surface,
+    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).apply(
+      bodyColor: ink,
+      displayColor: ink,
+    ),
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
+      backgroundColor: surface,
+      foregroundColor: ink,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       titleTextStyle: GoogleFonts.inter(
-        color: Colors.white,
+        color: ink,
         fontSize: 20,
         fontWeight: FontWeight.w800,
       ),
-      iconTheme: const IconThemeData(color: Colors.white),
-      actionsIconTheme: const IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: ink),
+      actionsIconTheme: const IconThemeData(color: ink),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: seed,
-        foregroundColor: Colors.white,
+        foregroundColor: surface,
         minimumSize: const Size.fromHeight(50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -155,40 +178,49 @@ ThemeData _darkTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.12),
-      hintStyle: const TextStyle(color: Colors.white70),
-      labelStyle: const TextStyle(color: Colors.white70),
+      fillColor: const Color(0xFF1E293B), // Slate-800
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8)), // Slate-400
+      labelStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: .18)),
+        borderSide: const BorderSide(color: Color(0xFF334155)), // Slate-700
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.white),
+        borderSide: const BorderSide(color: seed, width: 1.5),
       ),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        side: const BorderSide(color: Color(0xFF334155)), // Slate-700
       ),
-      color: Colors.white.withValues(alpha: 0.08),
+      color: const Color(0xFF1E293B), // Slate-800
     ),
     chipTheme: ChipThemeData(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
+      backgroundColor: const Color(0xFF334155),
+      labelStyle: const TextStyle(color: ink, fontWeight: FontWeight.w600),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF334155), // Slate-700
+      contentTextStyle: GoogleFonts.inter(
+          color: Colors.white, fontWeight: FontWeight.w600),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: Color(0xFF334155), // Slate-700
+      thickness: 1,
     ),
   );
 }

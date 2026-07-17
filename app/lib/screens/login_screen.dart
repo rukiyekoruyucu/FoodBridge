@@ -172,12 +172,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     TextField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("E-posta"),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _passCtrl,
                       obscureText: _obscure,
+                      style: const TextStyle(color: Colors.white),
                       decoration: _dec("Şifre").copyWith(
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _obscure = !_obscure),
@@ -238,7 +240,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   InputDecoration _dec(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white),
+      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
